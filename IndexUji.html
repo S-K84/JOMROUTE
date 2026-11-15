@@ -1780,7 +1780,7 @@ function fmtMin(sec) { const m = Math.round(sec / 60); return m >= 60 ? Math.flo
 function clock(ms) { return new Date(ms).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }); }
 function ago(ms) {
   const m = Math.round((Date.now() - ms) / 60000);
-  return m < 1 ? 'baru sahaja' : m < 60 ? m + ' min lalu' : Math.round(m / 60) + ' jam lalu';
+  return m < 1 ? 'baru sahaja' : m < 60 ? m + ' min lalu' : m < 2880 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
 }
 
 // Penyahkod Google encoded polyline
