@@ -66,3 +66,12 @@ test('amaran kamera: kamera berdekatan (< 300 m) disebut sekali sahaja sebagai s
   assert.strictEqual(c2.next(cams, 1500, 600, al).id, 4);         // kamera jauh disebut sendiri
   assert.strictEqual(c2.next(cams, 1900, 600, al), null);
 });
+
+test('ago: minit, jam (< 48 jam), kemudian hari', () => {
+  const c3 = {};
+  vm.runInNewContext(fn('ago') + ';this.ago = ago;', c3);
+  const H = 3600e3, now = Date.now();
+  assert.strictEqual(c3.ago(now - 5 * 60e3), '5 min lalu');
+  assert.strictEqual(c3.ago(now - 5 * H), '5 jam lalu');
+  assert.strictEqual(c3.ago(now - 324 * H), '14 hari lalu');
+});
