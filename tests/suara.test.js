@@ -55,3 +55,14 @@ test('amaran suara had laju guna margin 3 km/j untuk had automatik dan fungsi pe
   assert.match(s, /OVER_GAP_MS = 90000/);
   }
 });
+
+test('amaran kamera: kamera berdekatan (< 300 m) disebut sekali sahaja sebagai satu kumpulan', () => {
+  const c2 = {};
+  vm.runInNewContext('const CAM_GROUP_M = 300;' + fn('nextCamera') + ';this.next = nextCamera;', c2);
+  const cams = [{ id: 1, a: 1000 }, { id: 2, a: 1150 }, { id: 3, a: 1290 }, { id: 4, a: 2000 }];
+  const al = new Set();
+  assert.strictEqual(c2.next(cams, 500, 600, al).id, 1);
+  assert.strictEqual(c2.next(cams, 900, 600, al), null);          // 2 & 3 sudah dalam kumpulan
+  assert.strictEqual(c2.next(cams, 1500, 600, al).id, 4);         // kamera jauh disebut sendiri
+  assert.strictEqual(c2.next(cams, 1900, 600, al), null);
+});
