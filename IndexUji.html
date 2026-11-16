@@ -779,6 +779,7 @@
       <div id="reportStep1">
         <h3>Laporkan</h3>
         <!-- Lapor pantas: satu tekan terus dihantar (selamat semasa memandu) -->
+        <p class="pop-muted" style="margin:0 0 6px">Lapor pantas: satu tekan terus dihantar</p>
         <div class="quick-rep" id="quickRep"></div>
         <p class="pop-muted" style="margin:6px 0 8px">Atau pilih jenis & butiran (boleh lebih daripada satu, maks 5)</p>
         <div class="rgrid" id="typeGrid"></div>
@@ -1349,6 +1350,7 @@ const EN = {
   'Masih mencari… pelayan peta percuma sedang sibuk.': 'Still searching… the free map servers are busy.', 'Butiran teknikal': 'Technical details',
   'Pelayan peta percuma tidak menjawab sekarang.': 'The free map servers are not responding right now.',
   'Terlalu banyak cadangan kamera dihantar. Cuba lagi dalam beberapa jam.': 'Too many camera suggestions sent. Try again in a few hours.',
+  'Lapor pantas: satu tekan terus dihantar': 'Quick report: one tap sends it right away',
   'Terlalu banyak carian sejak sejam lalu. Cuba lagi dalam beberapa minit.': 'Too many searches in the last hour. Try again in a few minutes.',
   'Anda hampir sampai di destinasi.': 'You are almost at your destination.', 'Batal titik singgah': 'Cancel stop',
   'Tiada dijumpai dalam 60 km di hadapan, di sebelah jalan anda.': 'Nothing found in the next 60 km on your side of the road.',
@@ -1900,22 +1902,25 @@ function onLongPress(ll) {
   state.lpPopupObj = popup;
   popup.on('remove', () => { if (state.lpPopupObj === popup && lpMarker) { lpMarker.remove(); lpMarker = null; } });
   // Nama jalan (jika ada) — hanya untuk paparan; koordinat tepat yang dipilih pengguna dikekalkan
-  if (token && !offline) call('whereAmI', token, ll.lat, ll.lng).then(r => {
+  pl.named = token && !offline ? call('whereAmI', token, ll.lat, ll.lng).then(r => {
     if (state.lpPlace !== pl || !r || !r.road) return;
     pl.title = String(r.road).slice(0, 80);
     if (state.lpPopupObj && state.lpPopupObj.isOpen()) state.lpPopupObj.setContent(lpPopup(pl));
-  }).catch(() => {});
+  }).catch(() => {}) : null;
 }
 function lpPopup(pl) {
   return `<b>${esc(pl.title)}</b><br><span class="pop-muted">${esc(pl.sub)}</span><div class="lp-acts">
     <button data-lp="go">🚗 Pergi ke sini</button><button data-lp="home">🏠 Simpan sebagai Rumah</button>
     <button data-lp="work">💼 Simpan sebagai Kerja</button><button data-lp="fav">⭐ Kegemaran</button></div>`;
 }
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const b = e.target.closest('[data-lp]'); const pl = state.lpPlace;
   if (!b || !pl) return;
-  const a = b.dataset.lp, place = { title: pl.title, sub: pl.sub, lat: pl.lat, lng: pl.lng };
+  const a = b.dataset.lp;
   map.closePopup();
+  // Nama jalan mungkin belum sampai: tunggu sebentar (maks 2.5 s) supaya "Terkini" tidak menyimpan "Lokasi dipilih" + koordinat
+  if (pl.named) await Promise.race([pl.named, new Promise(r => setTimeout(r, 2500))]);
+  const place = { title: pl.title, sub: pl.sub, lat: pl.lat, lng: pl.lng };
   if (a === 'go') goTo(place);
   else if (a === 'fav') { toggleFav(place); }
   else { const p = places(); p[a] = place; savePlaces(p); toast(a === 'home' ? '🏠 Rumah disimpan.' : '💼 Kerja disimpan.'); }
