@@ -120,7 +120,7 @@ npm test
   juga memaparkan tarikh data. GitHub mematikan tugas berjadual selepas 60 hari tanpa aktiviti repo: jika tarikh dalam menu lama, semak tab Actions.
 - **Suara had laju (14 Nov 2026, aduan "terlalu kerap"):** "melebihi had laju" hanya selepas melebihi >= 8 s berterusan, ulang paling kerap 90 s, dan margin 3 km/j bila had
   automatik (OSM tidak tepat sepenuhnya; papan di skrin kekal 2 km/j). Sebutan had baharu hanya bila kekal >= 6 s, hanya PENURUNAN (kenaikan diingat sahaja), >= 60 s sejak sebutan lalu
-  (`shouldWarnSpeeding`, `shouldSayLimit`; diuji oleh `tests/suara.test.js`). Kamera berturut-turut: kamera OSM dalam 300 m dikumpul (`nextCamera`); laporan pengguna "Kamera AES" dalam 300 m dari kamera yang sudah diamaran juga tidak diamaran lagi (`nearAlertedCam`, `noteCamAlert`; saluran uji 2026.11.16-i).
+  (`shouldWarnSpeeding`, `shouldSayLimit`; diuji oleh `tests/suara.test.js`). Kamera berturut-turut: kamera OSM dalam 300 m dikumpul (`nextCamera`); laporan pengguna "Kamera AES" dalam 300 m dari kamera yang sudah diamaran juga tidak diamaran lagi (`nearAlertedCam`, `noteCamAlert`; 2026.11.16-i, disalin ke app biasa 2026.11.16-j).
 - **ID 30 hari:** pindah data perlu pengesahan pengguna ("Pulihkan data anda?"), kerana pelayar boleh dikongsi oleh akaun Google
   lain. Sekatan dipindah automatik. Data dipindah, bukan disalin.
 - **Deploy:** `@google/clasp@2.4.2` dipin. `clasp login` pemilik juga guna versi ini (format `.clasprc.json` berbeza antara versi).
