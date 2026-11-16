@@ -36,6 +36,20 @@ test('pembuka: lompat ke /exec aplikasi, "#pasang" papar langkah tanpa lompat', 
   assert.strictEqual(b.els.go.href, a.replaced);
 });
 
+test('pembuka: teks ikut bahasa telefon (English kecuali Melayu/Indonesia), bukan dwibahasa', () => {
+  const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const run = lang => {
+    const els = {}, el = id => (els[id] = els[id] || { style: {}, href: '' });
+    new Function('document', 'location', 'history', 'navigator', js)({ getElementById: el, body: {} },
+      { hash: '', search: '', pathname: '/', replace: () => {} }, { replaceState: () => {} }, { language: lang });
+    return els;
+  };
+  assert.strictEqual(run('en-US').go.textContent, 'Open JomRoute');
+  assert.strictEqual(run('en-US').buka.textContent, 'Opening JomRoute…');
+  assert.strictEqual(run('ms-MY').go.textContent, undefined);   // BM kekal (HTML asal)
+  assert.match(html, /<p id="buka">Membuka JomRoute…<\/p>/);
+});
+
 test('pembuka "#pasang": suruh tambah ikon dari halaman INI; butang buka jadi pilihan kedua (ikon "J" dari dalam aplikasi)', () => {
   assert.match(html, /<b>dari halaman ini<\/b>/);
   assert.match(html, /huruf “J”/);
