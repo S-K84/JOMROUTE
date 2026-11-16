@@ -75,3 +75,27 @@ test('ago: minit, jam (< 48 jam), kemudian hari', () => {
   assert.strictEqual(c3.ago(now - 5 * H), '5 jam lalu');
   assert.strictEqual(c3.ago(now - 324 * H), '14 hari lalu');
 });
+
+test('kamera: laporan pengguna "Kamera AES" dalam 300 m dari kamera OSM yang sudah diamaran tidak diamaran dua kali (dan sebaliknya)', () => {
+  const s2 = clientScript('IndexUji.html');
+  const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
+  const c = { state: {}, CAM_GROUP_M: 300 };
+  vm.runInNewContext('const CAM_GROUP_M = 300; const state = this.state;' + f('dist') + f('nearAlertedCam') + f('noteCamAlert') +
+    ';this.near = nearAlertedCam; this.note = noteCamAlert;', c);
+  const cam = { lat: 3.1, lng: 101.7 };
+  assert.strictEqual(c.near(cam), false);                         // belum ada amaran
+  c.note(cam);
+  assert.strictEqual(c.near({ lat: 3.1005, lng: 101.7 }), true);   // ~55 m: tempat sama
+  assert.strictEqual(c.near({ lat: 3.105, lng: 101.7 }), false);   // ~555 m: kamera lain
+  c.note({});                                                      // tiada koordinat: diabaikan
+  assert.strictEqual(c.state.camAlerts.length, 1);
+  for (let i = 0; i < 60; i++) c.note({ lat: 4 + i, lng: 101 });
+  assert.strictEqual(c.state.camAlerts.length, 50);                // had 50
+});
+
+test('kamera: checkHazards & checkCameras guna nearAlertedCam / noteCamAlert; routeCameras membawa koordinat', () => {
+  const s2 = clientScript('IndexUji.html');
+  assert.match(s2, /if \(r\.type === 'KAMERA'\) \{ if \(nearAlertedCam\(r\)\) return; noteCamAlert\(r\); \}/);
+  assert.match(s2, /cam\.lat != null && nearAlertedCam\(cam\)/);
+  assert.match(s2, /id: 'cam-' \+ el\.id, lat: el\.lat, lng: el\.lon/);
+});

@@ -65,3 +65,9 @@ test('cleanup membuang cadangan lama (> 90 hari)', () => {
   ctx.cleanup({});
   assert.strictEqual(env.sheet('SHEET_CAMSUG').getLastRow(), 1);
 });
+
+test('had kadar cadangan: mesej khusus (bukan "Terlalu banyak permintaan" umum)', () => {
+  const { ctx } = loadCode();
+  for (let i = 0; i < 10; i++) ctx.suggestCamera('g_A', { lat: P.lat + i * 0.01, lng: P.lng });
+  assert.throws(() => ctx.suggestCamera('g_A', { lat: P.lat + 0.5, lng: P.lng }), /Terlalu banyak cadangan kamera dihantar/);
+});

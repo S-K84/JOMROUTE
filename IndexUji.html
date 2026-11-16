@@ -1348,6 +1348,7 @@ const EN = {
   'Pilih apa yang anda cari di hadapan.': 'Choose what you are looking for ahead.', 'Singgah': 'Stop', 'Cuba lagi': 'Try again',
   'Masih mencari… pelayan peta percuma sedang sibuk.': 'Still searching… the free map servers are busy.', 'Butiran teknikal': 'Technical details',
   'Pelayan peta percuma tidak menjawab sekarang.': 'The free map servers are not responding right now.',
+  'Terlalu banyak cadangan kamera dihantar. Cuba lagi dalam beberapa jam.': 'Too many camera suggestions sent. Try again in a few hours.',
   'Terlalu banyak carian sejak sejam lalu. Cuba lagi dalam beberapa minit.': 'Too many searches in the last hour. Try again in a few minutes.',
   'Anda hampir sampai di destinasi.': 'You are almost at your destination.', 'Batal titik singgah': 'Cancel stop',
   'Tiada dijumpai dalam 60 km di hadapan, di sebelah jalan anda.': 'Nothing found in the next 60 km on your side of the road.',
@@ -2926,6 +2927,7 @@ function checkHazards() {
       if (r.type !== 'KAMERA' && !sameDirection(r, me.heading)) return;
     }
     state.alerted.add(r.id);
+    if (r.type === 'KAMERA') { if (nearAlertedCam(r)) return; noteCamAlert(r); }   // kamera OSM di tempat sama sudah diamaran
     const t = TYPES[r.type] || { label: r.type, icon: '⚠️' };
     toast(`${t.icon} ${t.label} di hadapan · ${fmtDist(d)}`, true);
     speak(VOICE[voiceLang].hazard(voiceLang === 'en' ? (TYPE_EN[r.type] || 'a hazard') : t.label, sayDist(d)), 'hazard');
@@ -4392,7 +4394,7 @@ function routeCameras(r, elements, fromSeg, maxAlong) {
   (elements || []).forEach(el => {
     if (el.type !== 'node' || !el.tags || el.tags.highway !== 'speed_camera') return;
     const l = locate({ lat: el.lat, lng: el.lon }, r, fromSeg, maxAlong);
-    if (l.off <= 40) out.push({ a: l.along, id: 'cam-' + el.id });
+    if (l.off <= 40) out.push({ a: l.along, id: 'cam-' + el.id, lat: el.lat, lng: el.lon });
   });
   return out;
 }
@@ -4425,6 +4427,13 @@ function renderSignals(along) {
 }
 function clearSignals() { state.sigs = []; state.sigDrawn = null; sigLayer.clearLayers(); }
 const CAM_GROUP_M = 300;
+/** Kamera (OSM atau laporan pengguna) dalam 300 m dari kamera yang sudah diamaran = tempat yang sama, jangan amaran dua kali. */
+function nearAlertedCam(p) { return (state.camAlerts || []).some(c => dist(c, p) < CAM_GROUP_M); }
+function noteCamAlert(p) {
+  if (p.lat == null) return;
+  (state.camAlerts = state.camAlerts || []).push({ lat: p.lat, lng: p.lng });
+  if (state.camAlerts.length > 50) state.camAlerts.shift();
+}
 /** Kamera seterusnya untuk diamaran. Kamera lain dalam 300 m darinya dianggap satu kumpulan (sudah diamaran), supaya tidak disebut berulang. */
 function nextCamera(cams, along, warnM, alerted) {
   const cam = cams.find(c => c.a > along && c.a - along <= warnM && !alerted.has(c.id));
@@ -4436,7 +4445,8 @@ function checkCameras(along) {
   if (S.alertTypes.indexOf('KAMERA') < 0 || S.travel === 'walk' || !state.me) return;
   const warnM = (Number(S.alertDist) || 600) + ((state.me.speed || 0) > 70 ? 400 : 0);
   const cam = nextCamera(state.cams || [], along, warnM, state.alerted);
-  if (!cam) return;
+  if (!cam || (cam.lat != null && nearAlertedCam(cam))) return;   // sudah diamaran sebagai laporan pengguna
+  noteCamAlert(cam);
   const d = cam.a - along;
   toast(`📷 Kamera laju · ${fmtDist(d)}`, true);
   speak(VOICE[voiceLang].camera(sayDist(d)), 'hazard');
