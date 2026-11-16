@@ -944,8 +944,8 @@ for (const file of FILES) test(`${file}: menu ☰ — Panel pentadbir dalam baha
 });
 
 // ---- Menu ☰: ikon garisan (SVG) untuk semua baris kecuali SOS & Mood yang kekal emoji (saluran uji)
-test('IndexUji.html: menu ☰ guna ikon garisan SVG; SOS dan Mood kekal emoji', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: menu ☰ guna ikon garisan SVG; SOS dan Mood kekal emoji`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       state.isOwner = true; renderDrawer();
