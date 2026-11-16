@@ -961,8 +961,8 @@ for (const file of FILES) test(`${file}: menu ☰ guna ikon garisan SVG; SOS dan
 });
 
 // ---- Skrin tetapan: semua ikon baris guna SVG garisan, tiada emoji (saluran uji)
-test('IndexUji.html: semua halaman tetapan guna ikon garisan SVG pada baris berikon', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: semua halaman tetapan guna ikon garisan SVG pada baris berikon`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const bad = await page.evaluate(() => {
       const out = [];
