@@ -885,3 +885,19 @@ for (const file of FILES) test(`${file}: mesej WhatsApp ikut bahasa tetapan (Eng
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Tekan lama pada peta → "Pergi ke sini": "Terkini" menyimpan nama jalan walaupun jawapannya lewat (saluran uji)
+test('IndexUji.html: tekan lama → Pergi ke sini terus selepas itu — Terkini menyimpan nama jalan, bukan "Lokasi dipilih"', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      window.__override = { whereAmI: () => ({ road: 'Jalan Ujian' }) };
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() });
+      onLongPress({ lat: 3.2, lng: 101.7 });
+      document.querySelector('[data-lp="go"]').click();   // sebelum jawapan server sampai
+    });
+    await page.waitForFunction(() => (places().recent || []).length > 0, null, { timeout: 5000 });
+    assert.strictEqual(await page.evaluate(() => places().recent[0].title), 'Jalan Ujian');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
