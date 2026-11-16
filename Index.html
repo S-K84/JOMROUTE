@@ -779,6 +779,7 @@
       <div id="reportStep1">
         <h3>Laporkan</h3>
         <!-- Lapor pantas: satu tekan terus dihantar (selamat semasa memandu) -->
+        <p class="pop-muted" style="margin:0 0 6px">Lapor pantas: satu tekan terus dihantar</p>
         <div class="quick-rep" id="quickRep"></div>
         <p class="pop-muted" style="margin:6px 0 8px">Atau pilih jenis & butiran (boleh lebih daripada satu, maks 5)</p>
         <div class="rgrid" id="typeGrid"></div>
@@ -1902,22 +1903,25 @@ function onLongPress(ll) {
   state.lpPopupObj = popup;
   popup.on('remove', () => { if (state.lpPopupObj === popup && lpMarker) { lpMarker.remove(); lpMarker = null; } });
   // Nama jalan (jika ada) — hanya untuk paparan; koordinat tepat yang dipilih pengguna dikekalkan
-  if (token && !offline) call('whereAmI', token, ll.lat, ll.lng).then(r => {
+  pl.named = token && !offline ? call('whereAmI', token, ll.lat, ll.lng).then(r => {
     if (state.lpPlace !== pl || !r || !r.road) return;
     pl.title = String(r.road).slice(0, 80);
     if (state.lpPopupObj && state.lpPopupObj.isOpen()) state.lpPopupObj.setContent(lpPopup(pl));
-  }).catch(() => {});
+  }).catch(() => {}) : null;
 }
 function lpPopup(pl) {
   return `<b>${esc(pl.title)}</b><br><span class="pop-muted">${esc(pl.sub)}</span><div class="lp-acts">
     <button data-lp="go">🚗 Pergi ke sini</button><button data-lp="home">🏠 Simpan sebagai Rumah</button>
     <button data-lp="work">💼 Simpan sebagai Kerja</button><button data-lp="fav">⭐ Kegemaran</button></div>`;
 }
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const b = e.target.closest('[data-lp]'); const pl = state.lpPlace;
   if (!b || !pl) return;
-  const a = b.dataset.lp, place = { title: pl.title, sub: pl.sub, lat: pl.lat, lng: pl.lng };
+  const a = b.dataset.lp;
   map.closePopup();
+  // Nama jalan mungkin belum sampai: tunggu sebentar (maks 2.5 s) supaya "Terkini" tidak menyimpan "Lokasi dipilih" + koordinat
+  if (pl.named) await Promise.race([pl.named, new Promise(r => setTimeout(r, 2500))]);
+  const place = { title: pl.title, sub: pl.sub, lat: pl.lat, lng: pl.lng };
   if (a === 'go') goTo(place);
   else if (a === 'fav') { toggleFav(place); }
   else { const p = places(); p[a] = place; savePlaces(p); toast(a === 'home' ? '🏠 Rumah disimpan.' : '💼 Kerja disimpan.'); }
@@ -3673,7 +3677,7 @@ function checkTripSuggest(pos) {
 // pada anggaran masa tiba di titik itu. Disemak setiap 30 minit; satu amaran bagi setiap kawasan (~10 km).
 const RAIN_EVERY_MS = 30 * 60000, RAIN_MM = 4, STORM_CODES = [95, 96, 99], HEAVY_CODES = [65, 82];
 function checkRain(r, along) {
-  if (!S.rainAlert || offline || state.rainBusy || !window.fetch) return;
+  if (!S.rainAlert || offline || state.rainBusy || !window.fetch || askBusy()) return;   // satu perkara pada satu masa: tunggu kad soalan hilang
   if (state.rainRoute === r && Date.now() - (state.rainAt || 0) < RAIN_EVERY_MS) return;
   state.rainBusy = true; state.rainAt = Date.now(); state.rainRoute = r;
   const navId = state.navId, pts = [];
@@ -3689,6 +3693,7 @@ function checkRain(r, along) {
     const list = Array.isArray(data) ? data : [data];
     const hit = rainAhead(pts, list, Date.now());
     if (!hit) return;
+    if (askBusy()) { state.rainAt = 0; return; }   // kad soalan muncul semasa menunggu ramalan: cuba lagi pada bacaan GPS seterusnya
     const said = state.rainSaid || (state.rainSaid = new Set()), key = Math.round((hit.d) / 10000);
     if (said.has(key)) return;
     said.add(key);
