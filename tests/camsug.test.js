@@ -36,9 +36,9 @@ test('cadangan dalam 50 m digabung; pengguna sama tidak boleh mengulang; jauh = 
   assert.strictEqual(Number(rows[0][7]), 2);
 });
 
-test('had kadar: seorang maks 5 cadangan setiap 6 jam', () => {
+test('had kadar: seorang maks 10 cadangan setiap 6 jam', () => {
   const { ctx } = loadCode();
-  for (let i = 0; i < 5; i++) ctx.suggestCamera('g_A', { lat: P.lat + i * 0.01, lng: P.lng });
+  for (let i = 0; i < 10; i++) ctx.suggestCamera('g_A', { lat: P.lat + i * 0.01, lng: P.lng });
   assert.throws(() => ctx.suggestCamera('g_A', { lat: P.lat + 0.5, lng: P.lng }));
 });
 
