@@ -842,7 +842,7 @@ for (const file of FILES) test(`${file}: "Cadang kamera di sini" menghantar loka
 // ---- Bahasa: storan kosong → jangan tunjuk BM dahulu sebelum bertukar ke English (saluran uji)
 for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingga bahasa dari server diketahui, kemudian English; dibuka juga jika server gagal`, async () => {
   const { page, errors, close } = await open(file);
-  const spy = 'new MutationObserver(() => { if (document.getElementById("langWait")) window.__sawWait = true; }).observe(document, { childList: true, subtree: true });';
+  const spy = 'new MutationObserver(() => { if (document.getElementById("langWait")) { window.__sawWait = true; window.__waitText = document.getElementById("langWait").textContent; } }).observe(document, { childList: true, subtree: true });';
   try {
     // 1) server berjaya dengan English: penutup pernah wujud, kemudian dibuka dan teks sudah English
     await page.addInitScript(spy + 'localStorage.clear(); window.__override = { loadPrefs: () => ({ t: 1, name: "Ali", voice: "en", settings: {} }) };');
@@ -850,6 +850,7 @@ for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingg
     await page.waitForFunction(() => window.__appStarted === true);
     await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 3000 });
     assert.strictEqual(await page.evaluate(() => window.__sawWait === true), true, 'skrin tidak ditutup');
+    if (file === 'IndexUji.html') assert.strictEqual(await page.evaluate(() => window.__waitText), 'JomRoute');   // Index.html menyusul selepas disahkan di telefon
     assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), 'Allow location');
     // 2) server gagal: skrin tetap dibuka (tidak tersekat)
     await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => { throw new Error("gagal"); } };');
