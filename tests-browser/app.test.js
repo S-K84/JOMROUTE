@@ -924,3 +924,21 @@ for (const file of FILES) test(`${file}: amaran ribut tidak muncul semasa kad so
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Menu ☰: bahagian "Pemilik" di bawah, selepas Tetapan; pengguna biasa tidak nampak (saluran uji)
+test('IndexUji.html: menu ☰ — Panel pentadbir dalam bahagian "Pemilik" selepas Tetapan; bukan pemilik tiada bahagian itu', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      state.isOwner = true; renderDrawer();
+      const t = $('drawerPane').textContent, own = {
+        label: t.indexOf('Pemilik'), settings: t.indexOf('Tetapan'), admin: t.indexOf('Panel pentadbir'), invite: t.indexOf('Kongsi JomRoute') };
+      state.isOwner = false; renderDrawer();
+      return { own, user: { label: $('drawerPane').textContent.indexOf('Pemilik'), admin: $('drawerPane').textContent.indexOf('Panel pentadbir') } };
+    });
+    assert.ok(r.own.settings > 0 && r.own.label > r.own.settings && r.own.admin > r.own.label, JSON.stringify(r.own));
+    assert.ok(r.own.invite < r.own.settings, 'Kongsi JomRoute patut sebelum Tetapan');
+    assert.deepStrictEqual(r.user, { label: -1, admin: -1 });
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
