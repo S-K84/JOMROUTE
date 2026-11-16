@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.16-g';
+const APP_VERSION = '2026.11.16-h';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -55,7 +55,7 @@ const CONFIG = {
     along:     [60, 3600],   G_overpass: [300, 3600], // OpenStreetMap Overpass — perkhidmatan percuma, guna berhemah
     G_photonAlong: [900, 3600], // Photon untuk "Cari di sepanjang laluan" (berasingan daripada carian tempat; hasil disimpan 1 jam)
     admin:     [600, 3600],
-    camSug:    [5, 21600],   G_camSug: [100, 21600],   // cadangan kamera laju (seorang maks 5 setiap 6 jam; cache maks 6 jam)
+    camSug:    [10, 21600],  G_camSug: [100, 21600],   // cadangan kamera laju (seorang maks 10 setiap 6 jam; cache maks 6 jam; yang ditolak pun dikira)
     location:  [400, 3600],  live: [720, 3600],   // aplikasi menyegar setiap 15 s ≈ 240 sejam
     profile:   [120, 3600],
     prefsLoad: [120, 3600],   prefsSave: [240, 3600],
