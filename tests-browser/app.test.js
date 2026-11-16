@@ -942,3 +942,20 @@ for (const file of FILES) test(`${file}: menu ☰ — Panel pentadbir dalam baha
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Menu ☰: ikon garisan (SVG) untuk semua baris kecuali SOS & Mood yang kekal emoji (saluran uji)
+test('IndexUji.html: menu ☰ guna ikon garisan SVG; SOS dan Mood kekal emoji', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      state.isOwner = true; renderDrawer();
+      const rows = [...document.querySelectorAll('#drawerPane .srow')].filter(x => x.querySelector('.sic'));
+      return rows.map(x => ({ svg: !!x.querySelector('.sic svg'), txt: x.querySelector('.sic').textContent.trim() }));
+    });
+    assert.strictEqual(r.length, 13);
+    assert.strictEqual(r.filter(x => x.svg).length, 11, JSON.stringify(r));
+    assert.strictEqual(r.filter(x => !x.svg).length, 2);          // SOS dan Mood
+    assert.ok(r.filter(x => !x.svg).some(x => x.txt === '🆘'));
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
