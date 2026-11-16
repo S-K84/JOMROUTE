@@ -782,6 +782,7 @@
         <div class="quick-rep" id="quickRep"></div>
         <p class="pop-muted" style="margin:6px 0 8px">Atau pilih jenis & butiran (boleh lebih daripada satu, maks 5)</p>
         <div class="rgrid" id="typeGrid"></div>
+        <button class="btn btn-soft" id="btnSuggestCam" style="width:100%; margin:8px 0">📷 Cadang kamera di sini</button>
         <button class="btn btn-accent" id="reportNext" style="width:100%; display:none">Seterusnya</button>
       </div>
       <div id="reportStep2" style="display:none">
@@ -1357,6 +1358,8 @@ const EN = {
   'Cuba destinasi yang dekat dengan jalan raya, atau tukar mod perjalanan.':
     'Try a destination near a road, or change the travel mode.', 'Titik singgah dibatalkan.': 'Stop cancelled.',
   // Pentadbir
+  'Anda sudah mencadang kamera di sini.': 'You have already suggested a camera here.', 'Senarai cadangan penuh. Cuba lagi nanti.': 'The suggestion list is full. Try again later.', 'Cadangan tidak dijumpai.': 'Suggestion not found.',
+  '📷 Cadang kamera di sini': '📷 Suggest a camera here', 'Cadangan kamera dihantar. Pemilik akan menyemaknya. Terima kasih! 🙏': 'Camera suggestion sent. The owner will review it. Thank you! 🙏', 'Seseorang sudah mencadang kamera di sini. Cadangan anda ditambah. Terima kasih!': 'Someone already suggested a camera here. Yours was added. Thank you!', 'Cadangan kamera': 'Camera suggestions', 'Tiada cadangan kamera.': 'No camera suggestions.', '📋 Salin CSV': '📋 Copy CSV', '📋 Baris CSV disalin. Tampal dalam data/kamera-tambahan.csv.': '📋 CSV line copied. Paste it into data/kamera-tambahan.csv.', '✅ Selesai (buang)': '✅ Done (remove)', 'Cadangan dibuang.': 'Suggestion removed.',
   'Kuota (global)': 'Quota (global)', 'Laporan aktif terkini': 'Latest active reports', 'Pengguna disekat': 'Blocked users',
   'Pengguna aktif (5 min)': 'Active users (5 min)', 'Pengguna (1 jam)': 'Users (1 hour)', 'Laporan aktif': 'Active reports',
   'Laporan (24 jam)': 'Reports (24 h)', 'Perkongsian langsung': 'Live shares', '🗺️ Lihat': '🗺️ View', '🗑️ Padam': '🗑️ Delete',
@@ -4737,6 +4740,12 @@ function renderAdmin(d) {
         <button class="warn" data-adm="del" data-id="${esc(x.id)}">🗑️ Padam</button>
         <button class="warn" data-adm="ban" data-id="${esc(x.user)}">🚫 Sekat pengguna</button></div></div>`;
   }).join('') || '<div class="hint">Tiada laporan aktif.</div>';
+  const cams = (d.camSug || []).map(x => `<div class="adm-row"><div class="t">📷 ${Number(x.lat).toFixed(5)}, ${Number(x.lng).toFixed(5)}${Number(x.count) > 1 ? ' · 👥' + Number(x.count) : ''}</div>
+      <div class="m">${esc(x.name || 'Tanpa Nama')} · ${ago(x.time)}</div>
+      <div class="adm-act"><button data-adm="cview" data-id="${esc(x.id)}">🗺️ Lihat</button>
+        <button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>
+        <button class="warn" data-adm="cdone" data-id="${esc(x.id)}">✅ Selesai (buang)</button></div></div>`).join('')
+    || '<div class="hint">Tiada cadangan kamera.</div>';
   const banned = (d.banned || []).map(u => `<div class="adm-row"><div class="t">${esc(u)}</div>
     <div class="adm-act"><button data-adm="unban" data-id="${esc(u)}">Nyahsekat</button></div></div>`).join('')
     || '<div class="hint">Tiada pengguna disekat.</div>';
@@ -4746,6 +4755,7 @@ function renderAdmin(d) {
     ${types ? `<p class="pop-muted" style="margin:0 0 12px">${types}</p>` : ''}
     <div class="sec-title">Kuota (global)</div>${quota}
     <div class="sec-title">Laporan aktif terkini</div>${reps}
+    <div class="sec-title">Cadangan kamera</div>${cams}
     <div class="sec-title">Pengguna disekat</div>${banned}
     <p class="pop-muted" style="margin-top:14px">Menyekat pengguna memadam semua laporan aktifnya dan menghalang akaun Google itu
       daripada menggunakan JomRoute.</p>`;
@@ -4763,6 +4773,14 @@ $('adminBody').addEventListener('click', async e => {
     if (x) { $('adminSheet').classList.remove('open'); state.follow = false; map.setView([x.lat, x.lng], 17); }
     return;
   }
+  if (act === 'cview' || act === 'ccopy') {
+    const x = (state.admin.camSug || []).find(y => y.id === id); if (!x) return;
+    if (act === 'cview') { $('adminSheet').classList.remove('open'); state.follow = false; map.setView([x.lat, x.lng], 18); return; }
+    const line = x.lat.toFixed(6) + ',' + x.lng.toFixed(6) + ',' + String(x.note || x.name || 'Kamera cadangan').replace(/[,\r\n]+/g, ' ');
+    try { await navigator.clipboard.writeText(line); toast('📋 Baris CSV disalin. Tampal dalam data/kamera-tambahan.csv.'); }
+    catch (err) { toast(line); }
+    return;
+  }
   if (act !== 'unban' && !b.classList.contains('sure')) {
     const old = b.textContent; b.classList.add('sure'); b.textContent = 'Pasti? Tekan lagi';
     setTimeout(() => { if (b.isConnected) { b.classList.remove('sure'); b.textContent = old; } }, 3000);
@@ -4772,6 +4790,7 @@ $('adminBody').addEventListener('click', async e => {
   try {
     if (act === 'del') { await call('adminDeleteReport', token, id); toast('🗑️ Laporan dipadam.'); }
     else if (act === 'ban') { await call('adminBan', token, id, true); toast('🚫 Pengguna disekat & laporannya dipadam.'); }
+    else if (act === 'cdone') { await call('adminResolveCamera', token, id); toast('Cadangan dibuang.'); }
     else if (act === 'unban') { await call('adminBan', token, id, false); toast('Pengguna dinyahsekat.'); }
     refresh(); loadAdmin();
   } catch (err) { b.disabled = false; toast(isNetErr(err) ? '📵 Tiada liputan.' : (err.message || String(err))); }
@@ -4808,6 +4827,18 @@ $('quickRep').addEventListener('click', e => {
     })
     .finally(() => $('quickRep').querySelectorAll('button').forEach(x => { x.disabled = false; }));
 });
+// Cadang kamera laju di lokasi semasa: masuk senarai semakan pemilik (bukan terus di peta)
+$('btnSuggestCam').onclick = async () => {
+  if (!state.me) { toast('Tetapkan lokasi anda dahulu.'); return; }
+  const b = $('btnSuggestCam'); b.disabled = true;
+  try {
+    const res = await call('suggestCamera', token, { lat: state.me.lat, lng: state.me.lng, name: userName });
+    $('reportModal').style.display = 'none';
+    toast(res && res.merged ? 'Seseorang sudah mencadang kamera di sini. Cadangan anda ditambah. Terima kasih!'
+      : 'Cadangan kamera dihantar. Pemilik akan menyemaknya. Terima kasih! 🙏');
+  } catch (e) { toast(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || String(e))); }
+  finally { b.disabled = false; }
+};
 function renderReportNext() {
   const n = state.pickedTypes.length;
   $('reportNext').style.display = n ? 'block' : 'none';

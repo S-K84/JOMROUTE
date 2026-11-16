@@ -20,7 +20,8 @@ test('tetamu (a_) tidak boleh lapor, undi, cari, kira laluan, kongsi perjalanan 
     startShare: () => ctx.startShare(G, { minutes: 15 }),
     updateShare: () => ctx.updateShare(G, '0123456789abcdef0123456789abcdef', {}),
     alongRoute: () => ctx.alongRoute(G, 'fuel', [[P.lat, P.lng]]),
-    nearbyPlaces: () => ctx.nearbyPlaces(G, 'fuel', P.lat, P.lng)
+    nearbyPlaces: () => ctx.nearbyPlaces(G, 'fuel', P.lat, P.lng),
+    suggestCamera: () => ctx.suggestCamera(G, { lat: P.lat, lng: P.lng })
   };
   for (const [name, fn] of Object.entries(calls)) assert.throws(fn, MSG, name);
 });

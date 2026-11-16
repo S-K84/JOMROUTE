@@ -809,3 +809,32 @@ test(`${file}: amaran suara "melebihi had laju" tidak serta-merta, sekali sahaja
   } finally { await close(); }
 });
 }
+
+// ---- Cadang kamera di sini (saluran uji sahaja dahulu): butang dalam helaian laporan + senarai semakan dalam panel pentadbir
+test('IndexUji.html: "Cadang kamera di sini" menghantar lokasi semasa; pemilik nampak & boleh salin/buang cadangan', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      window.__sent = [];
+      window.__override = {
+        suggestCamera: a => { __sent.push(a[1]); return { ok: true, merged: false }; },
+        adminOverview: () => ({ activeUsers: 1, usersHour: 1, reports: 0, reportsDay: 0, shares: 0, byType: {}, quota: [], recent: [], banned: [],
+          camSug: [{ id: 'abcdef12-0001', name: 'Ali', lat: 3.1, lng: 101.7, note: '', time: Date.now(), count: 2 }] }),
+        adminResolveCamera: () => ({ ok: true })
+      };
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() });
+      openReport();
+    });
+    await page.click('#btnSuggestCam');
+    await page.waitForFunction(() => window.__sent.length === 1);
+    const sent = await page.evaluate(() => window.__sent[0]);
+    assert.strictEqual(sent.lat, 3.1); assert.strictEqual(sent.lng, 101.7);
+    await page.evaluate(() => { state.isOwner = true; openAdmin(); });
+    await page.waitForFunction(() => /Cadangan kamera/.test($('adminBody').textContent) && /3\.10000, 101\.70000/.test($('adminBody').textContent));
+    assert.match(await page.textContent('#adminBody'), /👥2/);
+    await page.click('[data-adm="cdone"]');
+    await page.click('[data-adm="cdone"]');   // tekan kedua mengesahkan ("Pasti?")
+    await page.waitForFunction(() => __calls.indexOf('adminResolveCamera') >= 0);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
