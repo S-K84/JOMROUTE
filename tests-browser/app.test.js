@@ -864,3 +864,23 @@ test('IndexUji.html: storan kosong — skrin ditutup sehingga bahasa dari server
     assert.strictEqual(await page.evaluate(() => window.__sawWait === true), false);
   } finally { await close(); }
 });
+
+// ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
+test('IndexUji.html: mesej WhatsApp ikut bahasa tetapan (English / BM)', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const out = await page.evaluate(() => {
+      const got = [];
+      window.openWhatsApp = t => got.push(t);
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now(), acc: 12 });
+      voiceLang = 'en'; sosShare(); shareMyLocation();
+      voiceLang = 'ms'; sosShare();
+      return got;
+    });
+    assert.match(out[0], /EMERGENCY — I need help/);
+    assert.match(out[1], /I am here/);
+    assert.doesNotMatch(out[0] + out[1], /KECEMASAN|Saya di sini|Buka dengan/);
+    assert.match(out[2], /KECEMASAN — saya perlukan bantuan/);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
