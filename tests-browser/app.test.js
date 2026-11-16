@@ -850,7 +850,7 @@ for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingg
     await page.waitForFunction(() => window.__appStarted === true);
     await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 3000 });
     assert.strictEqual(await page.evaluate(() => window.__sawWait === true), true, 'skrin tidak ditutup');
-    if (file === 'IndexUji.html') assert.strictEqual(await page.evaluate(() => window.__waitText), 'JomRoute');   // Index.html menyusul selepas disahkan di telefon
+    assert.strictEqual(await page.evaluate(() => window.__waitText), 'JomRoute');
     assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), 'Allow location');
     // 2) server gagal: skrin tetap dibuka (tidak tersekat)
     await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => { throw new Error("gagal"); } };');
