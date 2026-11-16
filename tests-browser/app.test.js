@@ -809,3 +809,78 @@ test(`${file}: amaran suara "melebihi had laju" tidak serta-merta, sekali sahaja
   } finally { await close(); }
 });
 }
+
+// ---- Cadang kamera di sini (saluran uji sahaja dahulu): butang dalam helaian laporan + senarai semakan dalam panel pentadbir
+test('IndexUji.html: "Cadang kamera di sini" menghantar lokasi semasa; pemilik nampak & boleh salin/buang cadangan', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      window.__sent = [];
+      window.__override = {
+        suggestCamera: a => { __sent.push(a[1]); return { ok: true, merged: false }; },
+        adminOverview: () => ({ activeUsers: 1, usersHour: 1, reports: 0, reportsDay: 0, shares: 0, byType: {}, quota: [], recent: [], banned: [],
+          camSug: [{ id: 'abcdef12-0001', name: 'Ali', lat: 3.1, lng: 101.7, note: '', time: Date.now(), count: 2 }] }),
+        adminResolveCamera: () => ({ ok: true })
+      };
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() });
+      openReport();
+    });
+    await page.click('#btnSuggestCam');
+    await page.waitForFunction(() => window.__sent.length === 1);
+    const sent = await page.evaluate(() => window.__sent[0]);
+    assert.strictEqual(sent.lat, 3.1); assert.strictEqual(sent.lng, 101.7);
+    await page.evaluate(() => { state.isOwner = true; openAdmin(); });
+    await page.waitForFunction(() => /Cadangan kamera/.test($('adminBody').textContent) && /3\.10000, 101\.70000/.test($('adminBody').textContent));
+    assert.match(await page.textContent('#adminBody'), /👥2/);
+    await page.click('[data-adm="cdone"]');
+    await page.click('[data-adm="cdone"]');   // tekan kedua mengesahkan ("Pasti?")
+    await page.waitForFunction(() => __calls.indexOf('adminResolveCamera') >= 0);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
+
+// ---- Bahasa: storan kosong → jangan tunjuk BM dahulu sebelum bertukar ke English (saluran uji)
+test('IndexUji.html: storan kosong — skrin ditutup sehingga bahasa dari server diketahui, kemudian English; dibuka juga jika server gagal', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  const spy = 'new MutationObserver(() => { if (document.getElementById("langWait")) window.__sawWait = true; }).observe(document, { childList: true, subtree: true });';
+  try {
+    // 1) server berjaya dengan English: penutup pernah wujud, kemudian dibuka dan teks sudah English
+    await page.addInitScript(spy + 'localStorage.clear(); window.__override = { loadPrefs: () => ({ t: 1, name: "Ali", voice: "en", settings: {} }) };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 3000 });
+    assert.strictEqual(await page.evaluate(() => window.__sawWait === true), true, 'skrin tidak ditutup');
+    assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), 'Allow location');
+    // 2) server gagal: skrin tetap dibuka (tidak tersekat)
+    await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => { throw new Error("gagal"); } };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 6000 });
+    // 3) storan ada bahasa: tiada penutup langsung
+    await page.addInitScript('localStorage.setItem("jk_voice", "en"); window.__sawWait = false;');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForTimeout(300);
+    assert.strictEqual(await page.evaluate(() => window.__sawWait === true), false);
+  } finally { await close(); }
+});
+
+// ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
+test('IndexUji.html: mesej WhatsApp ikut bahasa tetapan (English / BM)', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const out = await page.evaluate(() => {
+      const got = [];
+      window.openWhatsApp = t => got.push(t);
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now(), acc: 12 });
+      voiceLang = 'en'; sosShare(); shareMyLocation();
+      voiceLang = 'ms'; sosShare();
+      return got;
+    });
+    assert.match(out[0], /EMERGENCY — I need help/);
+    assert.match(out[1], /I am here/);
+    assert.doesNotMatch(out[0] + out[1], /KECEMASAN|Saya di sini|Buka dengan/);
+    assert.match(out[2], /KECEMASAN — saya perlukan bantuan/);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

@@ -782,6 +782,7 @@
         <div class="quick-rep" id="quickRep"></div>
         <p class="pop-muted" style="margin:6px 0 8px">Atau pilih jenis & butiran (boleh lebih daripada satu, maks 5)</p>
         <div class="rgrid" id="typeGrid"></div>
+        <button class="btn btn-soft" id="btnSuggestCam" style="width:100%; margin:8px 0">📷 Cadang kamera di sini</button>
         <button class="btn btn-accent" id="reportNext" style="width:100%; display:none">Seterusnya</button>
       </div>
       <div id="reportStep2" style="display:none">
@@ -1357,6 +1358,8 @@ const EN = {
   'Cuba destinasi yang dekat dengan jalan raya, atau tukar mod perjalanan.':
     'Try a destination near a road, or change the travel mode.', 'Titik singgah dibatalkan.': 'Stop cancelled.',
   // Pentadbir
+  'Anda sudah mencadang kamera di sini.': 'You have already suggested a camera here.', 'Senarai cadangan penuh. Cuba lagi nanti.': 'The suggestion list is full. Try again later.', 'Cadangan tidak dijumpai.': 'Suggestion not found.',
+  '📷 Cadang kamera di sini': '📷 Suggest a camera here', 'Cadangan kamera dihantar. Pemilik akan menyemaknya. Terima kasih! 🙏': 'Camera suggestion sent. The owner will review it. Thank you! 🙏', 'Seseorang sudah mencadang kamera di sini. Cadangan anda ditambah. Terima kasih!': 'Someone already suggested a camera here. Yours was added. Thank you!', 'Cadangan kamera': 'Camera suggestions', 'Tiada cadangan kamera.': 'No camera suggestions.', '📋 Salin CSV': '📋 Copy CSV', '📋 Baris CSV disalin. Tampal dalam data/kamera-tambahan.csv.': '📋 CSV line copied. Paste it into data/kamera-tambahan.csv.', '✅ Selesai (buang)': '✅ Done (remove)', 'Cadangan dibuang.': 'Suggestion removed.',
   'Kuota (global)': 'Quota (global)', 'Laporan aktif terkini': 'Latest active reports', 'Pengguna disekat': 'Blocked users',
   'Pengguna aktif (5 min)': 'Active users (5 min)', 'Pengguna (1 jam)': 'Users (1 hour)', 'Laporan aktif': 'Active reports',
   'Laporan (24 jam)': 'Reports (24 h)', 'Perkongsian langsung': 'Live shares', '🗺️ Lihat': '🗺️ View', '🗑️ Padam': '🗑️ Delete',
@@ -1777,7 +1780,7 @@ function fmtDist(m) {
 const fmtSpeed = kmh => Math.max(0, Math.round(S.units === 'mi' ? kmh / 1.609344 : kmh));
 const speedUnit = () => (S.units === 'mi' ? 'bt/j' : 'km/j');
 function fmtMin(sec) { const m = Math.round(sec / 60); return m >= 60 ? Math.floor(m / 60) + ' j ' + (m % 60) + ' min' : m + ' min'; }
-function clock(ms) { return new Date(ms).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }); }
+function clock(ms, loc) { return new Date(ms).toLocaleTimeString(loc || 'ms-MY', { hour: '2-digit', minute: '2-digit' }); }
 function ago(ms) {
   const m = Math.round((Date.now() - ms) / 60000);
   return m < 1 ? 'baru sahaja' : m < 60 ? m + ' min lalu' : m < 2880 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu';
@@ -2526,7 +2529,7 @@ function onSettingsClick(e) {
     else if (a === 'admin') { closeDrawer(); openAdmin(); }
     else if (a === 'ujiOn' || a === 'ujiOff') { if (APP_URL) window.open(APP_URL + (a === 'ujiOn' ? '?uji=1' : ''), '_top'); }
     else if (a === 'sosShare') sosShare();
-    else if (a === 'inviteWa') openWhatsApp('🚗 Jom guna JomRoute — navigasi & laporan trafik komuniti Malaysia (percuma, tanpa muat turun app):\n' + INVITE_URL);
+    else if (a === 'inviteWa') openWhatsApp(lg('🚗 Jom guna JomRoute — navigasi & laporan trafik komuniti Malaysia (percuma, tanpa muat turun app):\n', '🚗 Try JomRoute — navigation & community traffic reports for Malaysia (free, no app download):\n') + INVITE_URL);
     else if (a === 'inviteCopy') {
       (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(INVITE_URL) : Promise.reject())
         .then(() => toast('📋 Pautan disalin.'), () => toast('Tekan lama pautan di atas untuk salin.'));
@@ -3222,6 +3225,9 @@ function shareLink(pl) {
 // tinggal kosong; bila pengguna kembali, Chrome iPhone memaparkan tab kosong itu (perlu tekan ✕). Jika app WhatsApp tidak
 // terbuka dalam masa WA_FALLBACK_MS (halaman masih kelihatan), guna wa.me seperti dahulu. Komputer: wa.me (WhatsApp Web).
 const WA_FALLBACK_MS = 2500;
+// Mesej WhatsApp ke keluarga/kawan mengikut bahasa tetapan (BM / English)
+const lg = (ms, en) => voiceLang === 'en' ? en : ms;
+const clockL = ms => clock(ms, voiceLang === 'en' ? 'en-US' : 'ms-MY');
 function openWhatsApp(text) {
   const t = encodeURIComponent(text), web = () => window.open('https:\/\/wa.me/?text=' + t, '_blank', 'noopener');
   if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return web();
@@ -3238,23 +3244,24 @@ function openWhatsApp(text) {
 function shareDest() {
   const d = state.dest; if (!d) return;
   const l = shareLink(d);
-  openWhatsApp(`📍 ${d.title || 'Lokasi'}\n` + (l.app ? `Buka dengan JomRoute: ${l.app}\n` : '') + `Google Maps: ${l.gmaps}`);
+  openWhatsApp(`📍 ${d.title || lg('Lokasi', 'Location')}\n` + (l.app ? `${lg('Buka dengan JomRoute', 'Open with JomRoute')}: ${l.app}\n` : '') + `Google Maps: ${l.gmaps}`);
 }
 /** Kecemasan: hantar lokasi semasa (Google Maps) ke WhatsApp — pengguna pilih kenalan sendiri. */
 function sosShare() {
   if (!state.me) return toast('Lokasi anda belum diketahui.');
   const l = shareLink({ lat: state.me.lat, lng: state.me.lng, title: 'KECEMASAN' });
-  openWhatsApp(`🆘 KECEMASAN — saya perlukan bantuan.\n📍 Lokasi saya: ${l.gmaps}` +
-    (state.me.acc ? `\n(ketepatan GPS ~${Math.round(state.me.acc)} m)` : ''));
+  openWhatsApp(lg('🆘 KECEMASAN — saya perlukan bantuan.\n📍 Lokasi saya: ', '🆘 EMERGENCY — I need help.\n📍 My location: ') + l.gmaps +
+    (state.me.acc ? lg(`\n(ketepatan GPS ~${Math.round(state.me.acc)} m)`, `\n(GPS accuracy ~${Math.round(state.me.acc)} m)`) : ''));
 }
 function shareMyLocation() {
   if (!state.me) return toast('Lokasi anda belum diketahui.');
   const l = shareLink({ lat: state.me.lat, lng: state.me.lng, title: (userName || 'Kawan') + ' di sini' });
-  let text = `📍 Saya di sini\n` + (l.app ? `Buka dengan JomRoute: ${l.app}\n` : '') + `Google Maps: ${l.gmaps}`;
+  let text = lg('📍 Saya di sini', '📍 I am here') + '\n' + (l.app ? `${lg('Buka dengan JomRoute', 'Open with JomRoute')}: ${l.app}\n` : '') + `Google Maps: ${l.gmaps}`;
   if (state.navigating && state.routes[state.selRoute]) {
     const r = state.routes[state.selRoute];
-    const etaTxt = clock(Date.now() + remainingSec(r) * 1000);
-    text = `🚗 Dalam perjalanan ke ${state.dest.title || 'destinasi'} — anggaran tiba ${etaTxt}\n` + text;
+    const etaTxt = clockL(Date.now() + remainingSec(r) * 1000);
+    text = lg(`🚗 Dalam perjalanan ke ${state.dest.title || 'destinasi'} — anggaran tiba ${etaTxt}\n`,
+      `🚗 On my way to ${state.dest.title || 'my destination'} — estimated arrival ${etaTxt}\n`) + text;
   }
   openWhatsApp(text);
 }
@@ -3357,7 +3364,8 @@ function offerTellFamily() {
     ms: 12000, onYes: () => {
       if (navId !== state.navId) return;
       const cur = state.routes[state.selRoute] || r;
-      openWhatsApp(`🏠 Saya dalam perjalanan pulang, anggaran tiba ${clock(Date.now() + remainingSec(cur) * 1000)}.`);
+      const eta = clockL(Date.now() + remainingSec(cur) * 1000);
+      openWhatsApp(lg(`🏠 Saya dalam perjalanan pulang, anggaran tiba ${eta}.`, `🏠 I'm on my way home, estimated arrival ${eta}.`));
     } });
 }
 
@@ -3956,8 +3964,9 @@ $('shareBody').addEventListener('click', async e => {
   if (!d || !state.share) return;
   const sh = state.share;
   if (d.dataset.shareDo === 'wa') {
-    const dest = sh.mode === 'arrive' && state.dest ? ' ke ' + (state.dest.title || 'destinasi') : '';
-    openWhatsApp(`🚗 Ikut perjalanan saya${dest} secara langsung (JomRoute):\n${sh.url}`);
+    const t = sh.mode === 'arrive' && state.dest && (state.dest.title || lg('destinasi', 'my destination'));
+    openWhatsApp(lg(`🚗 Ikut perjalanan saya${t ? ' ke ' + t : ''} secara langsung (JomRoute):\n${sh.url}`,
+      `🚗 Follow my trip${t ? ' to ' + t : ''} live (JomRoute):\n${sh.url}`));
   } else if (d.dataset.shareDo === 'copy') {
     try { await navigator.clipboard.writeText(sh.url); toast('📋 Pautan disalin.'); }
     catch (err) { toast('Tekan lama pautan di atas untuk salin.'); }
@@ -4737,6 +4746,12 @@ function renderAdmin(d) {
         <button class="warn" data-adm="del" data-id="${esc(x.id)}">🗑️ Padam</button>
         <button class="warn" data-adm="ban" data-id="${esc(x.user)}">🚫 Sekat pengguna</button></div></div>`;
   }).join('') || '<div class="hint">Tiada laporan aktif.</div>';
+  const cams = (d.camSug || []).map(x => `<div class="adm-row"><div class="t">📷 ${Number(x.lat).toFixed(5)}, ${Number(x.lng).toFixed(5)}${Number(x.count) > 1 ? ' · 👥' + Number(x.count) : ''}</div>
+      <div class="m">${esc(x.name || 'Tanpa Nama')} · ${ago(x.time)}</div>
+      <div class="adm-act"><button data-adm="cview" data-id="${esc(x.id)}">🗺️ Lihat</button>
+        <button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>
+        <button class="warn" data-adm="cdone" data-id="${esc(x.id)}">✅ Selesai (buang)</button></div></div>`).join('')
+    || '<div class="hint">Tiada cadangan kamera.</div>';
   const banned = (d.banned || []).map(u => `<div class="adm-row"><div class="t">${esc(u)}</div>
     <div class="adm-act"><button data-adm="unban" data-id="${esc(u)}">Nyahsekat</button></div></div>`).join('')
     || '<div class="hint">Tiada pengguna disekat.</div>';
@@ -4746,6 +4761,7 @@ function renderAdmin(d) {
     ${types ? `<p class="pop-muted" style="margin:0 0 12px">${types}</p>` : ''}
     <div class="sec-title">Kuota (global)</div>${quota}
     <div class="sec-title">Laporan aktif terkini</div>${reps}
+    <div class="sec-title">Cadangan kamera</div>${cams}
     <div class="sec-title">Pengguna disekat</div>${banned}
     <p class="pop-muted" style="margin-top:14px">Menyekat pengguna memadam semua laporan aktifnya dan menghalang akaun Google itu
       daripada menggunakan JomRoute.</p>`;
@@ -4763,6 +4779,14 @@ $('adminBody').addEventListener('click', async e => {
     if (x) { $('adminSheet').classList.remove('open'); state.follow = false; map.setView([x.lat, x.lng], 17); }
     return;
   }
+  if (act === 'cview' || act === 'ccopy') {
+    const x = (state.admin.camSug || []).find(y => y.id === id); if (!x) return;
+    if (act === 'cview') { $('adminSheet').classList.remove('open'); state.follow = false; map.setView([x.lat, x.lng], 18); return; }
+    const line = x.lat.toFixed(6) + ',' + x.lng.toFixed(6) + ',' + String(x.note || x.name || 'Kamera cadangan').replace(/[,\r\n]+/g, ' ');
+    try { await navigator.clipboard.writeText(line); toast('📋 Baris CSV disalin. Tampal dalam data/kamera-tambahan.csv.'); }
+    catch (err) { toast(line); }
+    return;
+  }
   if (act !== 'unban' && !b.classList.contains('sure')) {
     const old = b.textContent; b.classList.add('sure'); b.textContent = 'Pasti? Tekan lagi';
     setTimeout(() => { if (b.isConnected) { b.classList.remove('sure'); b.textContent = old; } }, 3000);
@@ -4772,6 +4796,7 @@ $('adminBody').addEventListener('click', async e => {
   try {
     if (act === 'del') { await call('adminDeleteReport', token, id); toast('🗑️ Laporan dipadam.'); }
     else if (act === 'ban') { await call('adminBan', token, id, true); toast('🚫 Pengguna disekat & laporannya dipadam.'); }
+    else if (act === 'cdone') { await call('adminResolveCamera', token, id); toast('Cadangan dibuang.'); }
     else if (act === 'unban') { await call('adminBan', token, id, false); toast('Pengguna dinyahsekat.'); }
     refresh(); loadAdmin();
   } catch (err) { b.disabled = false; toast(isNetErr(err) ? '📵 Tiada liputan.' : (err.message || String(err))); }
@@ -4808,6 +4833,18 @@ $('quickRep').addEventListener('click', e => {
     })
     .finally(() => $('quickRep').querySelectorAll('button').forEach(x => { x.disabled = false; }));
 });
+// Cadang kamera laju di lokasi semasa: masuk senarai semakan pemilik (bukan terus di peta)
+$('btnSuggestCam').onclick = async () => {
+  if (!state.me) { toast('Tetapkan lokasi anda dahulu.'); return; }
+  const b = $('btnSuggestCam'); b.disabled = true;
+  try {
+    const res = await call('suggestCamera', token, { lat: state.me.lat, lng: state.me.lng, name: userName });
+    $('reportModal').style.display = 'none';
+    toast(res && res.merged ? 'Seseorang sudah mencadang kamera di sini. Cadangan anda ditambah. Terima kasih!'
+      : 'Cadangan kamera dihantar. Pemilik akan menyemaknya. Terima kasih! 🙏');
+  } catch (e) { toast(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || String(e))); }
+  finally { b.disabled = false; }
+};
 function renderReportNext() {
   const n = state.pickedTypes.length;
   $('reportNext').style.display = n ? 'block' : 'none';
@@ -4996,6 +5033,18 @@ function applyPrefs(p) {
 }
 
 // ------------------------------------------------------------ Mula
+// Storan telefon kosong (iPhone kadang-kadang membuangnya) → bahasa belum diketahui sehingga tetapan dari server dimuat.
+// Tutup skrin sebentar (maks 4 s) supaya pengguna English tidak nampak BM dahulu.
+function endLangWait() {
+  clearTimeout(window.__langWaitT);
+  const d = document.getElementById('langWait'); if (d) d.remove();
+}
+if (store.get('jk_voice') == null) {
+  const d = document.createElement('div');
+  d.id = 'langWait'; d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f1422';
+  document.body.appendChild(d);
+  window.__langWaitT = setTimeout(endLangWait, 4000);
+}
 setUiLang(voiceLang);
 setSound(soundOn);
 applyTheme();
@@ -5023,6 +5072,7 @@ async function loadPrefsNow() {
     clearTimeout(prefsRetry);
     prefsRetry = setTimeout(loadPrefsNow, 30000);  // cuba lagi; simpanan kekal disekat
   }
+  endLangWait();
   askNameIfNeeded();
 }
 window.addEventListener('online', () => setTimeout(loadPrefsNow, 500));

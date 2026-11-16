@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.16-a';
+const APP_VERSION = '2026.11.16-d';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -41,6 +41,8 @@ const CONFIG = {
   MAX_SHARES: 500,          // had baris perkongsian perjalanan
   SHARE_MAX_MIN: 360,       // perkongsian paling lama 6 jam (termasuk "sampai destinasi")
   MAX_BANNED: 500,          // had senarai pengguna disekat
+  MAX_CAM_SUGG: 300,        // had cadangan kamera yang menunggu semakan pemilik
+  CAM_SUGG_RETAIN_DAYS: 90, // cadangan kamera yang tidak disemak dipadam selepas tempoh ini
   REGION: 'my',
   // Had kadar: [bilangan maksimum, tetingkap saat]. Kunci "G_" = global (semua pengguna).
   LIMITS: {
@@ -53,6 +55,7 @@ const CONFIG = {
     along:     [60, 3600],   G_overpass: [300, 3600], // OpenStreetMap Overpass — perkhidmatan percuma, guna berhemah
     G_photonAlong: [900, 3600], // Photon untuk "Cari di sepanjang laluan" (berasingan daripada carian tempat; hasil disimpan 1 jam)
     admin:     [600, 3600],
+    camSug:    [5, 21600],   G_camSug: [100, 21600],   // cadangan kamera laju (seorang maks 5 setiap 6 jam; cache maks 6 jam)
     location:  [400, 3600],  live: [720, 3600],   // aplikasi menyegar setiap 15 s ≈ 240 sejam
     profile:   [120, 3600],
     prefsLoad: [120, 3600],   prefsSave: [240, 3600],
@@ -1289,6 +1292,7 @@ function cleanup(e) {
       x => new Date(x[2]).getTime() > now - CONFIG.PREFS_RETAIN_DAYS * 864e5);
     // Privasi: rekod perkongsian perjalanan dipadam sehari selepas tamat
     pruneSheet_(sharesSheet_(), SHARE_HEADERS.length, x => new Date(x[8]).getTime() > now - 864e5);
+    pruneSheet_(camSugSheet_(), CAMSUG_HEADERS.length, x => new Date(x[6]).getTime() > now - CONFIG.CAM_SUGG_RETAIN_DAYS * 864e5);
     // Statistik tidak aktif setahun dipadam; tanpa ini sheet penuh (MAX_STATS_ROWS) dan pengguna baharu tidak dapat mata.
     // Baris lama tanpa lajur "Aktif" guna tarikh "Sertai".
     const stats = statsSheet_();
@@ -1786,6 +1790,74 @@ function nearbyPlaces(token, cat, lat, lng) {
   }
 }
 
+// ---------------------------------------------------------------- Cadangan kamera laju (pengguna → pemilik)
+// Pengguna Google mencadang kamera di lokasi mereka. Cadangan menunggu dalam Sheet; pemilik menyemaknya di panel pentadbir,
+// menyalin baris CSV ke data/kamera-tambahan.csv (melalui PR) atau membuangnya. Tiada kesan terus pada peta pengguna lain.
+const SHEET_CAMSUG = 'CadanganKamera';
+const CAMSUG_HEADERS = ['ID', 'PenggunaID', 'Nama', 'Lat', 'Lng', 'Catatan', 'Masa', 'Bilangan'];
+const CAMSUG_NEAR_M_ = 50;   // cadangan dalam jarak ini digabung (kira Bilangan), bukan baris baharu
+
+function camSugSheet_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  if (!id) throw new Error('Sistem belum disediakan.');
+  const ss = SpreadsheetApp.openById(id);
+  return ss.getSheetByName(SHEET_CAMSUG) || ensureSheet_(ss, SHEET_CAMSUG, CAMSUG_HEADERS);
+}
+
+function suggestCamera(token, r) {
+  const userId = requireGoogle_(verify_(token));
+  r = r || {};
+  const lat = Number(r.lat), lng = Number(r.lng);
+  if (!isValidCoord_(lat, lng)) throw new Error('Lokasi tidak sah.');
+  rateLimitAll_([['camSug', userId], ['G_camSug']], 1);
+  const note = cell_(r.note, 100), name = cell_(r.name, 30) || 'Tanpa Nama';
+  const lock = lock_();
+  try {
+    const sh = camSugSheet_(), last = sh.getLastRow();
+    const rows = last >= 2 ? sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues() : [];
+    const i = rows.findIndex(x => distKm_(Number(x[3]), Number(x[4]), lat, lng) * 1000 <= CAMSUG_NEAR_M_);
+    if (i >= 0) {
+      if (String(rows[i][1]).split(',').indexOf(userId) >= 0) throw new Error('Anda sudah mencadang kamera di sini.');
+      // Cadangan orang lain di tempat yang sama: tambah bilangan sahaja (lebih ramai mencadang = lebih meyakinkan)
+      sh.getRange(i + 2, 2).setValue(rows[i][1] + ',' + userId);
+      sh.getRange(i + 2, 8).setValue(Number(rows[i][7]) + 1);
+      return { ok: true, merged: true };
+    }
+    if (rows.length >= CONFIG.MAX_CAM_SUGG) throw new Error('Senarai cadangan penuh. Cuba lagi nanti.');
+    sh.appendRow([Utilities.getUuid(), userId, name, lat, lng, note, new Date(), 1]);
+    return { ok: true, merged: false };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminCamSuggestions_() {
+  const sh = camSugSheet_(), last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues()
+    .map(x => ({ id: String(x[0]), name: String(x[2] || ''), lat: Number(x[3]), lng: Number(x[4]), note: String(x[5] || ''),
+      time: new Date(x[6]).getTime(), count: Number(x[7]) || 1 }))
+    .sort((a, b) => b.count - a.count || b.time - a.time).slice(0, 100);
+}
+
+/** Pemilik sudah menyalin cadangan ke CSV atau menolaknya: buang baris itu. */
+function adminResolveCamera(token, id) {
+  requireOwner_(token);
+  id = String(id || '');
+  if (!/^[0-9a-f-]{8,36}$/i.test(id)) throw new Error('Cadangan tidak dijumpai.');
+  const lock = lock_();
+  try {
+    const sh = camSugSheet_(), last = sh.getLastRow();
+    const ids = last < 2 ? [] : sh.getRange(2, 1, last - 1, 1).getValues();
+    const i = ids.findIndex(v => String(v[0]) === id);
+    if (i < 0) throw new Error('Cadangan tidak dijumpai.');
+    sh.deleteRow(i + 2);
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // ---------------------------------------------------------------- Panel pentadbir (pemilik skrip sahaja)
 // Setiap fungsi menyemak isOwner_() di server — butang yang tersembunyi di klien BUKAN kawalan keselamatan.
 
@@ -1833,7 +1905,8 @@ function adminOverview(token) {
     activeUsers: seen.filter(t => t > now - USER_SEEN_SEC_ * 1000).length,
     usersHour: seen.filter(t => t > now - 3600000).length,
     reports: reps.length, reportsDay: reps.filter(x => x.time > now - 864e5).length,
-    shares: shares, byType: byType, quota: quota, recent: reps.slice(0, 100), banned: bannedList_()
+    shares: shares, byType: byType, quota: quota, recent: reps.slice(0, 100), banned: bannedList_(),
+    camSug: adminCamSuggestions_()
   };
 }
 
