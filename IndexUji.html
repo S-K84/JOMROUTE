@@ -3676,7 +3676,7 @@ function checkTripSuggest(pos) {
 // pada anggaran masa tiba di titik itu. Disemak setiap 30 minit; satu amaran bagi setiap kawasan (~10 km).
 const RAIN_EVERY_MS = 30 * 60000, RAIN_MM = 4, STORM_CODES = [95, 96, 99], HEAVY_CODES = [65, 82];
 function checkRain(r, along) {
-  if (!S.rainAlert || offline || state.rainBusy || !window.fetch) return;
+  if (!S.rainAlert || offline || state.rainBusy || !window.fetch || askBusy()) return;   // satu perkara pada satu masa: tunggu kad soalan hilang
   if (state.rainRoute === r && Date.now() - (state.rainAt || 0) < RAIN_EVERY_MS) return;
   state.rainBusy = true; state.rainAt = Date.now(); state.rainRoute = r;
   const navId = state.navId, pts = [];
@@ -3692,6 +3692,7 @@ function checkRain(r, along) {
     const list = Array.isArray(data) ? data : [data];
     const hit = rainAhead(pts, list, Date.now());
     if (!hit) return;
+    if (askBusy()) { state.rainAt = 0; return; }   // kad soalan muncul semasa menunggu ramalan: cuba lagi pada bacaan GPS seterusnya
     const said = state.rainSaid || (state.rainSaid = new Set()), key = Math.round((hit.d) / 10000);
     if (said.has(key)) return;
     said.add(key);

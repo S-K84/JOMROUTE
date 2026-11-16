@@ -901,3 +901,26 @@ test('IndexUji.html: tekan lama → Pergi ke sini terus selepas itu — Terkini 
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Amaran cuaca menunggu kad soalan ("Beritahu keluarga?") hilang: tidak bertindih (saluran uji)
+test('IndexUji.html: amaran ribut tidak muncul semasa kad soalan dipaparkan; muncul selepas kad hilang', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await startNav(page);
+    const shown = await page.evaluate(async () => {
+      const w = ms => new Promise(r => setTimeout(r, ms));
+      const hourly = { hourly: { time: [new Date(Date.now() - 3600e3).toISOString().slice(0, 16)], precipitation: [0], weather_code: [95] } };
+      window.fetch = () => Promise.resolve({ ok: true, status: 200, json: async () => [hourly, hourly, hourly, hourly] });
+      const r = state.routes[state.selRoute];
+      const reset = () => { state.rainAt = 0; state.rainSaid = null; state.rainBusy = false; state.rainRoute = null; $('toast').style.display = 'none'; };
+      reset(); showAsk({ icon: '🏠', text: 'Soalan', sub: '', yes: 'Ya', no: 'Tidak', ms: 60000 });
+      checkRain(r, 0); await w(300);
+      const during = $('toast').style.display === 'block';
+      hideAsk(); checkRain(r, 0); await w(300);
+      return { during, after: $('toast').style.display === 'block' && /Ribut petir/.test($('toast').textContent) };
+    });
+    assert.strictEqual(shown.during, false, 'amaran bertindih dengan kad soalan');
+    assert.strictEqual(shown.after, true, 'amaran tidak muncul selepas kad hilang');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
