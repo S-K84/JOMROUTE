@@ -33,7 +33,7 @@ test('pemilik dengan ?uji=1 mendapat IndexUji.html, versi ditanda (uji)', () => 
 
 test('ikon aplikasi: URL tetap ke assets/icon-180.png dalam repo, dan fail ikon wujud (PNG 180×180)', () => {
   serve({}, false);
-  assert.strictEqual(favicon, 'https://raw.githubusercontent.com/S-K84/MY-PROJECT/main/assets/icon-180.png');
+  assert.strictEqual(favicon, 'https://raw.githubusercontent.com/S-K84/JOMROUTE/main/assets/icon-180.png');
   const fs = require('fs'), path = require('path');
   const b = fs.readFileSync(path.join(__dirname, '..', 'assets', 'icon-180.png'));
   assert.strictEqual(b.slice(1, 4).toString(), 'PNG');

@@ -23,7 +23,7 @@ test('pembuka: lompat ke /exec aplikasi, "#pasang" papar langkah tanpa lompat', 
     let replaced = null, rewritten = null;
     new Function('document', 'location', 'history', js)(
       { getElementById: el, body },
-      { hash, search: '?x=1', pathname: '/MY-PROJECT/', replace: u => { replaced = u; } },
+      { hash, search: '?x=1', pathname: '/JOMROUTE/', replace: u => { replaced = u; } },
       { replaceState: (a, b, u) => { rewritten = u; } });
     return { els, body, replaced, rewritten };
   };
@@ -32,7 +32,7 @@ test('pembuka: lompat ke /exec aplikasi, "#pasang" papar langkah tanpa lompat', 
   const b = run('#pasang');
   assert.strictEqual(b.replaced, null);
   assert.strictEqual(b.els.pasang.style.display, 'block');
-  assert.strictEqual(b.rewritten, '/MY-PROJECT/?x=1');   // ikon yang ditambah tidak membawa "#pasang"
+  assert.strictEqual(b.rewritten, '/JOMROUTE/?x=1');   // ikon yang ditambah tidak membawa "#pasang"
   assert.strictEqual(b.els.go.href, a.replaced);
 });
 
@@ -42,7 +42,7 @@ test('pembuka "#pasang": suruh tambah ikon dari halaman INI; butang buka jadi pi
   const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const els = {}, body = {}, el = id => (els[id] = els[id] || { style: {}, href: '' });
   new Function('document', 'location', 'history', js)({ getElementById: el, body },
-    { hash: '#pasang', search: '', pathname: '/MY-PROJECT/', replace: () => {} }, { replaceState: () => {} });
+    { hash: '#pasang', search: '', pathname: '/JOMROUTE/', replace: () => {} }, { replaceState: () => {} });
   assert.strictEqual(body.className, 'pasang');
   assert.strictEqual(els.go.textContent, 'Buka tanpa ikon');
 });

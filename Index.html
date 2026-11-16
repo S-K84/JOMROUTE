@@ -861,7 +861,7 @@ const TYPES = <?!= typesJson ?>;
 const INITIAL = <?!= initialJson ?>;   // destinasi daripada pautan kongsi (?to=lat,lng&name=…)
 const APP_URL = <?!= appUrlJson ?>;
 // Pautan jemputan: halaman pembuka GitHub Pages (ikon skrin utama + langkah pasang), terus lompat ke APP_URL.
-const INVITE_URL = 'https:\/\/s-k84.github.io/MY-PROJECT/#pasang';
+const INVITE_URL = 'https:\/\/s-k84.github.io/JOMROUTE/#pasang';
 const TRACK = <?!= trackJson ?>;      // ID pautan jejak perjalanan (?track=…), jika dibuka sebagai penonton
 // Warna bulatan & pilihan kecil bagi setiap jenis laporan (paparan sahaja)
 const COLORS = { SESAK:'#e53935', POLIS:'#1e88e5', KEMALANGAN:'#8d99a6', BAHAYA:'#fb8c00', BANJIR:'#00acc1',
@@ -4167,7 +4167,7 @@ function speedAt(intervals, along) {
 // ---- Titik tetap (kamera laju + lampu isyarat seluruh Malaysia) dari fail statik GitHub Pages, dikemas kini sebulan sekali
 // oleh .github/workflows/titik-bulanan.yml. Pertanyaan Overpass dari telefon tidak boleh diharap (13 Nov 2026: 5 pelayan tamat
 // masa), jadi fail ini dibaca dahulu dan Overpass hanya sandaran (fail belum ada / tidak dapat dimuat).
-const TITIK_URL = 'https:\/\/s-k84.github.io/MY-PROJECT/data/titik.json';
+const TITIK_URL = 'https:\/\/s-k84.github.io/JOMROUTE/data/titik.json';
 let titikP = null, titikFailAt = 0;
 /** Muat fail titik sekali (disimpan dalam ingatan). Pulangkan Promise<{c, s}> atau null jika gagal (dicuba semula selepas 5 minit). */
 function loadTitik() {
@@ -4196,7 +4196,7 @@ function titikElements(d, boxes) {
 // ---- Jalan ber-had laju dari fail statik (docs/data/had/, dikemas kini sebulan sekali oleh .github/workflows/had-bulanan.yml).
 // Kawasan 0.25° (kunci lantai(lat*4)_lantai(lng*4)); hanya kawasan di sekitar laluan dimuat. indeks.json menyenaraikan kawasan yang ada.
 // Gagal / belum ada fail → null, dan Overpass digunakan sebagai sandaran.
-const HAD_URL = 'https:\/\/s-k84.github.io/MY-PROJECT/data/had/';
+const HAD_URL = 'https:\/\/s-k84.github.io/JOMROUTE/data/had/';
 let hadIdxP = null, hadIdxFailAt = 0;
 const hadTiles = {};
 function fetchJson(url) {
@@ -4256,7 +4256,7 @@ function loadHad(boxes) {
 // ---- Tempat (minyak, R&R, masjid, tandas, makan, ATM, caj EV, stesen) dari fail statik docs/data/poi/<kategori>/<kawasan>.json,
 // dikemas kini sebulan sekali oleh .github/workflows/had-bulanan.yml. Kunci kawasan sama seperti had laju (hadKeys).
 // Fail tiada / gagal / lambat → null, dan sumber lama (server Photon + Overpass dari telefon) digunakan sebagai sandaran.
-const POI_URL = 'https:\/\/s-k84.github.io/MY-PROJECT/data/poi/';
+const POI_URL = 'https:\/\/s-k84.github.io/JOMROUTE/data/poi/';
 let poiIdxP = null, poiIdxFailAt = 0, poiOk = 0;   // poiOk: bilangan fail tempat yang berjaya dimuat (diperiksa oleh ujian muat awal)
 const poiTiles = {};
 function loadPoiIndex() {

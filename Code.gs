@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.15-b';
+const APP_VERSION = '2026.11.16-a';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -79,7 +79,7 @@ const MOODS = ['🙂', '😎', '🤠', '😇', '🥳', '😴', '🤓', '😤', '
 // ---------------------------------------------------------------- Web app
 
 // Ikon aplikasi (tab pelayar & "Tambah ke Skrin Utama"). Fail dalam repo (assets/), dihidang terus oleh GitHub — URL TETAP.
-const ICON_URL_ = 'https://raw.githubusercontent.com/S-K84/MY-PROJECT/main/assets/icon-180.png';
+const ICON_URL_ = 'https://raw.githubusercontent.com/S-K84/JOMROUTE/main/assets/icon-180.png';
 
 function doGet(e) {
   // Saluran uji: PEMILIK boleh buka .../exec?uji=1 untuk mencuba IndexUji.html di telefon sebelum perubahan berisiko

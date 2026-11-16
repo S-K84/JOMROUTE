@@ -165,7 +165,7 @@ for (const file of FILES) test(`${file}: anggaran kos minyak pada pilihan laluan
       return { card, qr: img.src || '', fits: a.right <= b.right + 0.5 && a.bottom <= b.bottom + 0.5 };
     });
     assert.match(r.card, /⛽ ~RM 1\.55/);          // 11.1 km × 7 L/100 km × RM 2
-    assert.match(decodeURIComponent(r.qr), /create-qr-code.*data=https:\/\/s-k84\.github\.io\/MY-PROJECT\/#pasang$/);   // pautan pendek dengan ikon
+    assert.match(decodeURIComponent(r.qr), /create-qr-code.*data=https:\/\/s-k84\.github\.io\/JOMROUTE\/#pasang$/);   // pautan pendek dengan ikon
     assert.ok(r.fits, 'gambar QR terkeluar dari kotak putih');
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
@@ -287,7 +287,7 @@ for (const file of FILES) test(`${file}: halaman "Tambah ke skrin utama" ada but
       const a = document.getElementById('hsInstall');
       return { href: a ? a.href : '', target: a ? a.target : '', text: document.body.innerText };
     });
-    assert.strictEqual(r.href, 'https://s-k84.github.io/MY-PROJECT/#pasang');
+    assert.strictEqual(r.href, 'https://s-k84.github.io/JOMROUTE/#pasang');
     assert.strictEqual(r.target, '_top');
     assert.match(r.text, /guna Chrome/);
     assert.doesNotMatch(r.text, /iPhone · Safari/);

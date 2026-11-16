@@ -19,7 +19,7 @@ test('ambil_titik.py: ujian unit Python (jenis kamera/lampu, Singapura, pendua, 
 for (const file of ['Index.html', 'IndexUji.html']) {
 test(`${file}: titik dibaca dari fail statik dahulu, Overpass sandaran; mesej diagnostik sementara dibuang`, () => {
   const s = clientScript(file);
-  assert.match(s, /TITIK_URL = 'https:\\\/\\\/s-k84\.github\.io\/MY-PROJECT\/data\/titik\.json'/);
+  assert.match(s, /TITIK_URL = 'https:\\\/\\\/s-k84\.github\.io\/JOMROUTE\/data\/titik\.json'/);
   assert.match(s, /loadTitik\(\)\.then\(d => d \? titikElements\(d, bx\) : overpassRaw\(qN/);
   assert.ok(!/toast\(['`]🚦/.test(s) && !/toast\(['`]🛣️/.test(s), 'mesej diagnostik 🚦/🛣️ masih ada');
   assert.ok(!/slDiag|wDiag|sigToast|wayToast/.test(s));
