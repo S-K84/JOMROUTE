@@ -926,8 +926,8 @@ for (const file of FILES) test(`${file}: amaran ribut tidak muncul semasa kad so
 });
 
 // ---- Menu ☰: bahagian "Pemilik" di bawah, selepas Tetapan; pengguna biasa tidak nampak (saluran uji)
-test('IndexUji.html: menu ☰ — Panel pentadbir dalam bahagian "Pemilik" selepas Tetapan; bukan pemilik tiada bahagian itu', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: menu ☰ — Panel pentadbir dalam bahagian "Pemilik" selepas Tetapan; bukan pemilik tiada bahagian itu`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       state.isOwner = true; renderDrawer();
