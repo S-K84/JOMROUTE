@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.16-h';
+const APP_VERSION = '2026.11.16-i';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -1809,7 +1809,8 @@ function suggestCamera(token, r) {
   r = r || {};
   const lat = Number(r.lat), lng = Number(r.lng);
   if (!isValidCoord_(lat, lng)) throw new Error('Lokasi tidak sah.');
-  rateLimitAll_([['camSug', userId], ['G_camSug']], 1);
+  try { rateLimitAll_([['camSug', userId], ['G_camSug']], 1); }
+  catch (e) { throw new Error(/Terlalu banyak/.test(e.message) ? 'Terlalu banyak cadangan kamera dihantar. Cuba lagi dalam beberapa jam.' : e.message); }
   const note = cell_(r.note, 100), name = cell_(r.name, 30) || 'Tanpa Nama';
   const lock = lock_();
   try {
