@@ -887,8 +887,8 @@ for (const file of FILES) test(`${file}: mesej WhatsApp ikut bahasa tetapan (Eng
 });
 
 // ---- Tekan lama pada peta → "Pergi ke sini": "Terkini" menyimpan nama jalan walaupun jawapannya lewat (saluran uji)
-test('IndexUji.html: tekan lama → Pergi ke sini terus selepas itu — Terkini menyimpan nama jalan, bukan "Lokasi dipilih"', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: tekan lama → Pergi ke sini terus selepas itu — Terkini menyimpan nama jalan, bukan "Lokasi dipilih"`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.evaluate(() => {
       window.__override = { whereAmI: () => ({ road: 'Jalan Ujian' }) };
@@ -903,8 +903,8 @@ test('IndexUji.html: tekan lama → Pergi ke sini terus selepas itu — Terkini 
 });
 
 // ---- Amaran cuaca menunggu kad soalan ("Beritahu keluarga?") hilang: tidak bertindih (saluran uji)
-test('IndexUji.html: amaran ribut tidak muncul semasa kad soalan dipaparkan; muncul selepas kad hilang', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: amaran ribut tidak muncul semasa kad soalan dipaparkan; muncul selepas kad hilang`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await startNav(page);
     const shown = await page.evaluate(async () => {
