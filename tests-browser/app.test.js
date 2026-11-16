@@ -959,3 +959,20 @@ for (const file of FILES) test(`${file}: menu ☰ guna ikon garisan SVG; SOS dan
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Skrin tetapan: semua ikon baris guna SVG garisan, tiada emoji (saluran uji)
+test('IndexUji.html: semua halaman tetapan guna ikon garisan SVG pada baris berikon', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const bad = await page.evaluate(() => {
+      const out = [];
+      Object.keys(PAGES).filter(k => !['repTypes', 'alertTypes', 'mood', 'audio'].includes(k)).forEach(k => {   // jenis laporan, mood & pautan audio kekal
+        const box = document.createElement('div'); box.innerHTML = PAGES[k]().html;
+        box.querySelectorAll('.sic').forEach(e => { if (!e.querySelector('svg')) out.push(k + ':' + e.textContent.trim()); });
+      });
+      return out;
+    });
+    assert.deepStrictEqual(bad, []);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
