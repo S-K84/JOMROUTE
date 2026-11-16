@@ -5041,7 +5041,9 @@ function endLangWait() {
 }
 if (store.get('jk_voice') == null) {
   const d = document.createElement('div');
-  d.id = 'langWait'; d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f1422';
+  d.id = 'langWait'; d.textContent = 'JomRoute';   // sama untuk semua bahasa, jadi tiada terjemahan
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f1422;color:#f2f3f5;display:flex;align-items:center;' +
+    'justify-content:center;font:800 clamp(36px,12vw,56px) system-ui,-apple-system,sans-serif';
   document.body.appendChild(d);
   window.__langWaitT = setTimeout(endLangWait, 4000);
 }
