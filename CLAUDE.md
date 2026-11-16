@@ -92,7 +92,7 @@ npm test
 
 ## Keputusan yang sudah dibuat
 - **Ikon skrin utama iPhone:** Apps Script tidak boleh menetapkan `apple-touch-icon`, jadi halaman pembuka `docs/index.html`
-  (GitHub Pages, `https://s-k84.github.io/MY-PROJECT/`) memberi ikon dan terus lompat ke `/exec`. `#pasang` memaparkan
+  (GitHub Pages, `https://s-k84.github.io/JOMROUTE/`) memberi ikon dan terus lompat ke `/exec`. `#pasang` memaparkan
   langkah pasang. Tambah ke skrin utama dari **Chrome** iPhone (Safari tidak dapat membuka web app Apps Script ini).
 - **Jubin peta:** `tile.openstreetmap.org` (siang & malam). Malam: jubin OSM **dimalapkan** (`body.dark-map .leaflet-tile-pane`),
   bukan `invert` (jalan jadi hitam). CARTO kini memerlukan kunci API (jubin "API KEY REQUIRED", Nov 2026) — jangan guna

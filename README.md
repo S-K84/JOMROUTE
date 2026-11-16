@@ -38,7 +38,7 @@ Aplikasi navigasi dan laporan trafik komuniti (ala Waze), dibina dengan **Google
 `cleanup()` berjalan setiap jam (pencetus masa) untuk membuang data lama.
 
 ### Data statik bulanan (OpenStreetMap)
-Overpass dan Photon dari telefon tidak boleh diharap (sering sibuk atau menyekat), jadi data berikut dimuat turun **sekali sebulan** dan dihidang sebagai fail biasa oleh GitHub Pages (`https://s-k84.github.io/MY-PROJECT/data/…`). Aplikasi membacanya dahulu; Overpass hanya sandaran.
+Overpass dan Photon dari telefon tidak boleh diharap (sering sibuk atau menyekat), jadi data berikut dimuat turun **sekali sebulan** dan dihidang sebagai fail biasa oleh GitHub Pages (`https://s-k84.github.io/JOMROUTE/data/…`). Aplikasi membacanya dahulu; Overpass hanya sandaran.
 
 | Data | Fail | Skrip |
 |---|---|---|

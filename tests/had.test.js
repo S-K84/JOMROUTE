@@ -24,7 +24,7 @@ test('ambil_poi.py: ujian unit Python (kategori sama dengan klien, tajuk/sub, ka
 for (const file of ['Index.html', 'IndexUji.html']) {
 test(`${file}: tempat dibaca dari fail statik dahulu (poiElements, loadPoi, orNull); kategori Python sepadan dengan ALONG_Q klien`, async () => {
   const s = clientScript(file);
-  assert.match(s, /POI_URL = 'https:\\\/\\\/s-k84\.github\.io\/MY-PROJECT\/data\/poi\/'/);
+  assert.match(s, /POI_URL = 'https:\\\/\\\/s-k84\.github\.io\/JOMROUTE\/data\/poi\/'/);
   assert.match(s, /let list = await orNull\(poiAlong\(cat, pts\), 4000\)/);
   assert.match(s, /orNull\(poiNear\(cat, me\), 4000\) \|\| await call\('nearbyPlaces'/);
   // kategori: klien ALONG_Q dan skrip Python mesti ada kunci yang sama
@@ -77,7 +77,7 @@ test('had-bulanan.yml: berjadual bulanan, hanya menyimpan docs/data/had', () => 
 for (const file of ['Index.html', 'IndexUji.html']) {
 test(`${file}: had laju dibaca dari fail statik dahulu, Overpass sandaran; hadKeys & hadElements betul`, () => {
   const s = clientScript(file);
-  assert.match(s, /HAD_URL = 'https:\\\/\\\/s-k84\.github\.io\/MY-PROJECT\/data\/had\/'/);
+  assert.match(s, /HAD_URL = 'https:\\\/\\\/s-k84\.github\.io\/JOMROUTE\/data\/had\/'/);
   assert.match(s, /loadHad\(bx\)\.then\(els => els \? \{ elements: els \} : overpassRaw\(qW/);
   const ctx = {};
   vm.runInNewContext(fn(s, 'hadKeys') + fn(s, 'hadElements') + ';this.k = hadKeys; this.e = hadElements;', ctx);
