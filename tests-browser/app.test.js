@@ -811,8 +811,8 @@ test(`${file}: amaran suara "melebihi had laju" tidak serta-merta, sekali sahaja
 }
 
 // ---- Cadang kamera di sini (saluran uji sahaja dahulu): butang dalam helaian laporan + senarai semakan dalam panel pentadbir
-test('IndexUji.html: "Cadang kamera di sini" menghantar lokasi semasa; pemilik nampak & boleh salin/buang cadangan', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: "Cadang kamera di sini" menghantar lokasi semasa; pemilik nampak & boleh salin/buang cadangan`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.evaluate(() => {
       window.__sent = [];
@@ -840,8 +840,8 @@ test('IndexUji.html: "Cadang kamera di sini" menghantar lokasi semasa; pemilik n
 });
 
 // ---- Bahasa: storan kosong → jangan tunjuk BM dahulu sebelum bertukar ke English (saluran uji)
-test('IndexUji.html: storan kosong — skrin ditutup sehingga bahasa dari server diketahui, kemudian English; dibuka juga jika server gagal', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingga bahasa dari server diketahui, kemudian English; dibuka juga jika server gagal`, async () => {
+  const { page, errors, close } = await open(file);
   const spy = 'new MutationObserver(() => { if (document.getElementById("langWait")) window.__sawWait = true; }).observe(document, { childList: true, subtree: true });';
   try {
     // 1) server berjaya dengan English: penutup pernah wujud, kemudian dibuka dan teks sudah English
@@ -866,8 +866,8 @@ test('IndexUji.html: storan kosong — skrin ditutup sehingga bahasa dari server
 });
 
 // ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
-test('IndexUji.html: mesej WhatsApp ikut bahasa tetapan (English / BM)', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: mesej WhatsApp ikut bahasa tetapan (English / BM)`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const out = await page.evaluate(() => {
       const got = [];
