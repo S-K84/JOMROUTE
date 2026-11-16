@@ -2125,7 +2125,7 @@ function getToggle(k) {
 
 // ---- Pembina baris (teks dinamik MESTI di-esc oleh pemanggil)
 // Ikon garisan (gaya Lucide) untuk menu ☰; SOS & Mood kekal emoji supaya jelas dikenali
-const LINE_ICONS = {"eyeOff": "<path d=\"M9.88 9.88a3 3 0 1 0 4.24 4.24\"/><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61\"/><line x1=\"2\" x2=\"22\" y1=\"2\" y2=\"22\"/>", "award": "<circle cx=\"12\" cy=\"8\" r=\"6\"/><path d=\"M15.477 12.89 17 22l-5-3-5 3 1.523-9.11\"/>", "lock": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>", "home": "<path d=\"m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/>", "pin": "<path d=\"M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/>", "radio": "<path d=\"M4.9 19.1C1 15.2 1 8.8 4.9 4.9\"/><path d=\"M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5\"/><path d=\"M19.1 4.9C23 8.8 23 15.1 19.1 19\"/>", "shield": "<path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/>", "flask": "<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\"/><path d=\"M8.5 2h7\"/><path d=\"M7 16h10\"/>", "back": "<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11\"/>", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "phone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/><path d=\"M12 18h.01\"/>", "gear": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>"};
+const LINE_ICONS = {"eyeOff": "<path d=\"M9.88 9.88a3 3 0 1 0 4.24 4.24\"/><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61\"/><line x1=\"2\" x2=\"22\" y1=\"2\" y2=\"22\"/>", "award": "<circle cx=\"12\" cy=\"8\" r=\"6\"/><path d=\"M15.477 12.89 17 22l-5-3-5 3 1.523-9.11\"/>", "lock": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>", "home": "<path d=\"m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/><polyline points=\"9 22 9 12 15 12 15 22\"/>", "pin": "<path d=\"M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/>", "radio": "<path d=\"M4.9 19.1C1 15.2 1 8.8 4.9 4.9\"/><path d=\"M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><path d=\"M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5\"/><path d=\"M19.1 4.9C23 8.8 23 15.1 19.1 19\"/>", "shield": "<path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/>", "flask": "<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\"/><path d=\"M8.5 2h7\"/><path d=\"M7 16h10\"/>", "back": "<path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11\"/>", "users": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", "phone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/><path d=\"M12 18h.01\"/>", "gear": "<path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>","map": "<path d=\"M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z\"/><path d=\"M15 5.764v15\"/><path d=\"M9 3.236v15\"/>","volume": "<path d=\"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z\"/><path d=\"M16 9a5 5 0 0 1 0 6\"/><path d=\"M19.364 18.364a9 9 0 0 0 0-12.728\"/>","navigation": "<polygon points=\"3 11 22 2 13 21 11 13 3 11\"/>","car": "<path d=\"M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2\"/><circle cx=\"7\" cy=\"17\" r=\"2\"/><path d=\"M9 17h6\"/><circle cx=\"17\" cy=\"17\" r=\"2\"/>","alert": "<path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4\"/><path d=\"M12 17h.01\"/>","gauge": "<path d=\"m12 14 4-4\"/><path d=\"M3.34 19a10 10 0 1 1 17.32 0\"/>","music": "<path d=\"M9 18V5l12-2v13\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><circle cx=\"18\" cy=\"16\" r=\"3\"/>","bell": "<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/><path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>","clock": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>","calendar": "<path d=\"M8 2v4\"/><path d=\"M16 2v4\"/><rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/><path d=\"M3 10h18\"/>","mic": "<path d=\"M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z\"/><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/>","play": "<polygon points=\"6 3 20 12 6 21 6 3\"/>","coin": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8\"/><path d=\"M12 18V6\"/>","route": "<circle cx=\"6\" cy=\"19\" r=\"3\"/><path d=\"M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15\"/><circle cx=\"18\" cy=\"5\" r=\"3\"/>","ship": "<path d=\"M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1\"/><path d=\"M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76\"/><path d=\"M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6\"/><path d=\"M12 10v4\"/><path d=\"M12 2v3\"/>","zap": "<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\"/>","baby": "<path d=\"M9 12h.01\"/><path d=\"M15 12h.01\"/><path d=\"M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5\"/><path d=\"M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1\"/>","coffee": "<path d=\"M10 2v2\"/><path d=\"M14 2v2\"/><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\"/><path d=\"M6 2v2\"/>","rain": "<path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\"/><path d=\"M16 14v6\"/><path d=\"M8 14v6\"/><path d=\"M12 16v6\"/>","landmark": "<line x1=\"3\" x2=\"21\" y1=\"22\" y2=\"22\"/><line x1=\"6\" x2=\"6\" y1=\"18\" y2=\"11\"/><line x1=\"10\" x2=\"10\" y1=\"18\" y2=\"11\"/><line x1=\"14\" x2=\"14\" y1=\"18\" y2=\"11\"/><line x1=\"18\" x2=\"18\" y1=\"18\" y2=\"11\"/><polygon points=\"12 2 20 7 4 7\"/>","compass": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><polygon points=\"16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76\"/>","cloud": "<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>","pencil": "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"/><path d=\"m15 5 4 4\"/>","trash": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\"/><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\"/>","briefcase": "<path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/>","bookmark": "<path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/>","fuel": "<line x1=\"3\" x2=\"15\" y1=\"22\" y2=\"22\"/><line x1=\"4\" x2=\"14\" y1=\"9\" y2=\"9\"/><path d=\"M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18\"/><path d=\"M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5\"/>"};
 const lineIcon = k => '<svg viewBox="0 0 24 24" aria-hidden="true">' + LINE_ICONS[k] + '</svg>';
 function sRow(o) {
   const attr = o.go ? `data-go="${o.go}"` : o.toggle ? `data-toggle="${o.toggle}"` : o.doAct ? `data-do="${o.doAct}"`
@@ -2199,19 +2199,19 @@ const PAGES = {
         : '⚠️ iPhone: guna <b>Chrome</b>. Safari tidak dapat membuka aplikasi ini. Jika ikon lama (huruf “J” atau anak panah) ada di skrin utama, buang dahulu.'}</p>` };
   },
   root: () => ({ title: 'Tetapan', html:
-    list([sRow({ go: 'general', icon: '⚙️', color: '#26c6da', label: 'Umum' }),
-      sRow({ go: 'mapd', icon: '🗺️', color: '#43a047', label: 'Paparan peta' }),
-      sRow({ go: 'voice', icon: '🔊', color: '#29b6f6', label: 'Suara & bunyi' })]) +
+    list([sRow({ go: 'general', icon: lineIcon('gear'), color: '#26c6da', label: 'Umum' }),
+      sRow({ go: 'mapd', icon: lineIcon('map'), color: '#43a047', label: 'Paparan peta' }),
+      sRow({ go: 'voice', icon: lineIcon('volume'), color: '#29b6f6', label: 'Suara & bunyi' })]) +
     sec('Pilihan pemanduan') +
-    list([sRow({ go: 'nav', icon: '🧭', color: '#3d7cf5', label: 'Navigasi' }),
-      sRow({ go: 'vehicle', icon: '🚘', color: '#29b6f6', label: 'Butiran kenderaan' }),
-      sRow({ go: 'alerts', icon: '⚠️', color: '#fb8c00', label: 'Amaran & laporan' }),
-      sRow({ go: 'speedo', icon: '⏱️', color: '#ff7043', label: 'Meter laju' }),
-      sRow({ go: 'audio', icon: '🎵', color: '#ec407a', label: 'Pemain audio' })]) +
+    list([sRow({ go: 'nav', icon: lineIcon('navigation'), color: '#3d7cf5', label: 'Navigasi' }),
+      sRow({ go: 'vehicle', icon: lineIcon('car'), color: '#29b6f6', label: 'Butiran kenderaan' }),
+      sRow({ go: 'alerts', icon: lineIcon('alert'), color: '#fb8c00', label: 'Amaran & laporan' }),
+      sRow({ go: 'speedo', icon: lineIcon('gauge'), color: '#ff7043', label: 'Meter laju' }),
+      sRow({ go: 'audio', icon: lineIcon('music'), color: '#ec407a', label: 'Pemain audio' })]) +
     sec('Notifikasi') +
-    list([sRow({ go: 'notif', icon: '🔔', color: '#ab47bc', label: 'Notifikasi' }),
-      sRow({ go: 'reminders', icon: '👶', color: '#5c6bc0', label: 'Peringatan' }),
-      sRow({ go: 'planned', icon: '🗓️', color: '#26a69a', label: 'Pemanduan dirancang' })]) }),
+    list([sRow({ go: 'notif', icon: lineIcon('bell'), color: '#ab47bc', label: 'Notifikasi' }),
+      sRow({ go: 'reminders', icon: lineIcon('clock'), color: '#5c6bc0', label: 'Peringatan' }),
+      sRow({ go: 'planned', icon: lineIcon('calendar'), color: '#26a69a', label: 'Pemanduan dirancang' })]) }),
 
   general: () => ({ title: 'Umum', html:
     `<div class="slist">${segRow('voiceLang', 'Bahasa / Language')}${segRow('units', 'Unit jarak')}` +
@@ -2235,7 +2235,7 @@ const PAGES = {
   repTypes: () => ({ title: 'Laporan di peta', html: note('Pilih jenis laporan yang dipaparkan di peta.') + list(typeRows('repTypes')) }),
 
   voice: () => ({ title: 'Suara & bunyi', html:
-    sec('Suara') + list([sRow({ go: 'voiceList', icon: '🗣️', color: '#b3e5fc', label: 'Suara semasa', value: esc(currentVoiceName()) })]) +
+    sec('Suara') + list([sRow({ go: 'voiceList', icon: lineIcon('mic'), color: '#0288d1', label: 'Suara semasa', value: esc(currentVoiceName()) })]) +
     sec('Arahan suara') + list(CHOICES.voiceMode.opts.map((o, i) => sRow({ pick: 'voiceMode|' + i, label: o[1], check: S.voiceMode === o[0] }))) +
     note(CHOICES.voiceMode.note) +
     sec('Bunyi') +
@@ -2243,7 +2243,7 @@ const PAGES = {
       <input type="range" data-range="volume" min="0" max="1" step="0.1" value="${Number(S.volume)}"
         style="width:100%; margin-top:10px"></span></div></div>` +
     note('Pada iPhone, kelantangan suara dikawal oleh butang volum telefon.') +
-    list([sRow({ doAct: 'testVoice', icon: '▶️', color: '#26a69a', label: 'Uji suara' })]) }),
+    list([sRow({ doAct: 'testVoice', icon: lineIcon('play'), color: '#26a69a', label: 'Uji suara' })]) }),
 
   voiceList: () => {
     const vs = voicesFor(voiceLang);
@@ -2258,18 +2258,18 @@ const PAGES = {
 
   nav: () => ({ title: 'Navigasi', html:
     sec('Pilihan') +
-    list([sRow({ toggle: 'avoidTolls', icon: '💰', color: '#ef5350', label: 'Elak jalan bertol' }),
-      sRow({ toggle: 'avoidHighways', icon: '🛣️', color: '#66bb6a', label: 'Elak lebuh raya' }),
-      sRow({ toggle: 'avoidFerries', icon: '⛴️', color: '#29b6f6', label: 'Elak feri' }),
-      sRow({ toggle: 'fasterRoute', icon: '⚡', color: '#ffb300', label: 'Cadang laluan lebih pantas',
+    list([sRow({ toggle: 'avoidTolls', icon: lineIcon('coin'), color: '#ef5350', label: 'Elak jalan bertol' }),
+      sRow({ toggle: 'avoidHighways', icon: lineIcon('route'), color: '#66bb6a', label: 'Elak lebuh raya' }),
+      sRow({ toggle: 'avoidFerries', icon: lineIcon('ship'), color: '#29b6f6', label: 'Elak feri' }),
+      sRow({ toggle: 'fasterRoute', icon: lineIcon('zap'), color: '#ffb300', label: 'Cadang laluan lebih pantas',
         sub: 'Semak setiap 10 minit semasa navigasi' })]) +
     note('"Jalan tidak berturap" dan "Elak simpang sukar" tidak disokong oleh servis laluan Google dalam Apps Script.') +
-    sec('Butiran kenderaan') + list([choiceRow('vehicle', 'Jenis kenderaan', '🚘', '#29b6f6')]) }),
+    sec('Butiran kenderaan') + list([choiceRow('vehicle', 'Jenis kenderaan', lineIcon('car'), '#29b6f6')]) }),
 
   vehicle: () => ({ title: 'Butiran kenderaan',
-    html: list([choiceRow('vehicle', 'Jenis kenderaan', '🚘', '#29b6f6'), choiceRow('carIcon', 'Ikon kenderaan')]) +
+    html: list([choiceRow('vehicle', 'Jenis kenderaan', lineIcon('car'), '#29b6f6'), choiceRow('carIcon', 'Ikon kenderaan')]) +
     note(CHOICES.vehicle.note) + sec('Anggaran kos minyak') +
-    list([choiceRow('fuelL100', 'Penggunaan minyak', '⛽', '#ef6c00'), choiceRow('fuelPrice', 'Harga minyak', '💵', '#2e7d32')]) +
+    list([choiceRow('fuelL100', 'Penggunaan minyak', lineIcon('fuel'), '#ef6c00'), choiceRow('fuelPrice', 'Harga minyak', lineIcon('coin'), '#2e7d32')]) +
     note('Kos dipaparkan pada pilihan laluan, cth. "⛽ ~RM 18". Tol tidak termasuk.') }),
 
   alerts: () => ({ title: 'Amaran & laporan', html:
@@ -2299,31 +2299,31 @@ const PAGES = {
     note('Notifikasi push dan e-mel seperti Waze <b>tidak boleh</b> dihantar oleh aplikasi web Apps Script: ' +
       'ia tidak boleh berjalan bila ditutup, dan JomRoute tidak menyimpan e-mel anda.') +
     sec('Notifikasi dalam aplikasi') +
-    list([sRow({ go: 'alertTypes', icon: '⚠️', color: '#fb8c00', label: 'Amaran laporan di hadapan',
+    list([sRow({ go: 'alertTypes', icon: lineIcon('alert'), color: '#fb8c00', label: 'Amaran laporan di hadapan',
         value: S.alertTypes.length ? 'Hidup' : 'Mati' }),
-      sRow({ go: 'speedo', icon: '⏱️', color: '#ff7043', label: 'Amaran had laju', value: S.speedLimit ? 'Hidup' : 'Mati' }),
-      sRow({ go: 'reminders', icon: '⏰', color: '#5c6bc0', label: 'Peringatan',
+      sRow({ go: 'speedo', icon: lineIcon('gauge'), color: '#ff7043', label: 'Amaran had laju', value: S.speedLimit ? 'Hidup' : 'Mati' }),
+      sRow({ go: 'reminders', icon: lineIcon('clock'), color: '#5c6bc0', label: 'Peringatan',
         value: [S.childReminder, S.restRemind, S.rainAlert, S.prayerRemind].filter(Boolean).length + ' / 4' })]) }),
 
   reminders: () => ({ title: 'Peringatan', html:
-    list([sRow({ toggle: 'childReminder', icon: '👶', color: '#5c6bc0', label: 'Peringatan anak' })]) +
+    list([sRow({ toggle: 'childReminder', icon: lineIcon('baby'), color: '#5c6bc0', label: 'Peringatan anak' })]) +
     note('Bila tiba di destinasi, JomRoute mengingatkan anda (paparan & suara) supaya memeriksa tempat duduk belakang.') +
-    list([sRow({ toggle: 'restRemind', icon: '☕', color: '#8d6e63', label: 'Peringatan rehat',
+    list([sRow({ toggle: 'restRemind', icon: lineIcon('coffee'), color: '#8d6e63', label: 'Peringatan rehat',
         sub: 'Selepas 2 jam memandu tanpa henti' }),
-      sRow({ toggle: 'rainAlert', icon: '🌧️', color: '#1e88e5', label: 'Amaran hujan lebat',
+      sRow({ toggle: 'rainAlert', icon: lineIcon('rain'), color: '#1e88e5', label: 'Amaran hujan lebat',
         sub: 'Ramalan cuaca di sepanjang laluan (Open-Meteo)' }),
-      sRow({ toggle: 'prayerRemind', icon: '🕌', color: '#2e7d32', label: 'Peringatan waktu solat',
+      sRow({ toggle: 'prayerRemind', icon: lineIcon('landmark'), color: '#2e7d32', label: 'Peringatan waktu solat',
         sub: 'Semasa navigasi · masjid / surau di hadapan' })]) +
     note('Waktu solat dikira di telefon (kaedah JAKIM: Subuh 20°, Isyak 18°) — anggaran, boleh berbeza beberapa minit daripada jadual rasmi.') }),
 
   planned: () => ({ title: 'Pemanduan dirancang', html:
-    list([sRow({ toggle: 'tripSuggest', icon: '🧭', color: '#26a69a', label: 'Cadangan perjalanan',
+    list([sRow({ toggle: 'tripSuggest', icon: lineIcon('compass'), color: '#26a69a', label: 'Cadangan perjalanan',
       sub: 'Pagi: ke tempat kerja · petang: pulang ke rumah' })]) +
     note('Isnin–Jumaat. Bila anda buka aplikasi pukul 6–10 pagi atau 4–9 petang, JomRoute bertanya sekali sehari. ' +
       'Simpan Rumah & Kerja dahulu.') +
     note('Belum tersedia. Peringatan "masa untuk bertolak" memerlukan notifikasi push dan akses kalendar, ' +
       'yang tidak boleh dibuat oleh aplikasi web Apps Script ketika ia ditutup.') +
-    list([sRow({ go: 'places', icon: '🏠', color: '#8d6e63', label: 'Rumah, kerja & kegemaran',
+    list([sRow({ go: 'places', icon: lineIcon('home'), color: '#8d6e63', label: 'Rumah, kerja & kegemaran',
       sub: 'Pintasan pantas untuk perjalanan biasa' })]) }),
 
   achievements: () => {
@@ -2350,21 +2350,21 @@ const PAGES = {
         (S.syncPlaces ? 'Rumah, kerja & kegemaran juga disimpan di server supaya tidak hilang (iPhone membuang storan pelayar). '
           : 'Rumah, kerja & kegemaran disimpan dalam telefon ini sahaja. ') +
         'Sejarah carian sentiasa kekal dalam telefon sahaja. Pemilik aplikasi boleh melihat data di server.') +
-      list([sRow({ doAct: 'name', icon: '✏️', color: '#78909c', label: 'Tukar nama samaran', value: esc(userName || '') }),
-        sRow({ toggle: 'syncPlaces', icon: '🏠', color: '#8d6e63', label: 'Simpan Rumah, kerja & kegemaran di server',
+      list([sRow({ doAct: 'name', icon: lineIcon('pencil'), color: '#78909c', label: 'Tukar nama samaran', value: esc(userName || '') }),
+        sRow({ toggle: 'syncPlaces', icon: lineIcon('cloud'), color: '#8d6e63', label: 'Simpan Rumah, kerja & kegemaran di server',
           sub: 'Matikan untuk simpan dalam telefon sahaja' }),
-        sRow({ doAct: 'hideNow', icon: '📍', color: '#e53935', label: 'Padam lokasi saya dari server sekarang' }),
-        sRow({ doAct: 'delPrefs', icon: '☁️', color: '#e53935', label: 'Padam tetapan & tempat saya dari server' }),
-        sRow({ doAct: 'clearHist', icon: '🗑️', color: '#e53935', label: 'Padam sejarah carian' })]) };
+        sRow({ doAct: 'hideNow', icon: lineIcon('pin'), color: '#e53935', label: 'Padam lokasi saya dari server sekarang' }),
+        sRow({ doAct: 'delPrefs', icon: lineIcon('cloud'), color: '#e53935', label: 'Padam tetapan & tempat saya dari server' }),
+        sRow({ doAct: 'clearHist', icon: lineIcon('trash'), color: '#e53935', label: 'Padam sejarah carian' })]) };
   },
 
   places: () => {
     const pl = places();
     return { title: 'Rumah & kerja', html:
-      list([sRow({ act: 'set-home', icon: '🏠', color: '#8d6e63', label: 'Rumah', value: esc(pl.home ? pl.home.title : 'Tetapkan') }),
-        sRow({ act: 'set-work', icon: '💼', color: '#6d4c41', label: 'Kerja', value: esc(pl.work ? pl.work.title : 'Tetapkan') })]) +
+      list([sRow({ act: 'set-home', icon: lineIcon('home'), color: '#8d6e63', label: 'Rumah', value: esc(pl.home ? pl.home.title : 'Tetapkan') }),
+        sRow({ act: 'set-work', icon: lineIcon('briefcase'), color: '#6d4c41', label: 'Kerja', value: esc(pl.work ? pl.work.title : 'Tetapkan') })]) +
       sec('Kegemaran') +
-      ((pl.favs || []).length ? list(pl.favs.map((f, i) => sRow({ doAct: 'unfav|' + i, icon: '🔖', color: '#ffb300',
+      ((pl.favs || []).length ? list(pl.favs.map((f, i) => sRow({ doAct: 'unfav|' + i, icon: lineIcon('bookmark'), color: '#ffb300',
           label: esc(f.title), sub: 'Tekan untuk buang' })))
         : note('Tekan ⭐ pada skrin laluan untuk simpan kegemaran.')) };
   },
