@@ -5027,6 +5027,18 @@ function applyPrefs(p) {
 }
 
 // ------------------------------------------------------------ Mula
+// Storan telefon kosong (iPhone kadang-kadang membuangnya) → bahasa belum diketahui sehingga tetapan dari server dimuat.
+// Tutup skrin sebentar (maks 4 s) supaya pengguna English tidak nampak BM dahulu.
+function endLangWait() {
+  clearTimeout(window.__langWaitT);
+  const d = document.getElementById('langWait'); if (d) d.remove();
+}
+if (store.get('jk_voice') == null) {
+  const d = document.createElement('div');
+  d.id = 'langWait'; d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f1422';
+  document.body.appendChild(d);
+  window.__langWaitT = setTimeout(endLangWait, 4000);
+}
 setUiLang(voiceLang);
 setSound(soundOn);
 applyTheme();
@@ -5054,6 +5066,7 @@ async function loadPrefsNow() {
     clearTimeout(prefsRetry);
     prefsRetry = setTimeout(loadPrefsNow, 30000);  // cuba lagi; simpanan kekal disekat
   }
+  endLangWait();
   askNameIfNeeded();
 }
 window.addEventListener('online', () => setTimeout(loadPrefsNow, 500));

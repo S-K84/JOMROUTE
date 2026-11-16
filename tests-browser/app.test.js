@@ -838,3 +838,29 @@ test('IndexUji.html: "Cadang kamera di sini" menghantar lokasi semasa; pemilik n
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Bahasa: storan kosong → jangan tunjuk BM dahulu sebelum bertukar ke English (saluran uji)
+test('IndexUji.html: storan kosong — skrin ditutup sehingga bahasa dari server diketahui, kemudian English; dibuka juga jika server gagal', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  const spy = 'new MutationObserver(() => { if (document.getElementById("langWait")) window.__sawWait = true; }).observe(document, { childList: true, subtree: true });';
+  try {
+    // 1) server berjaya dengan English: penutup pernah wujud, kemudian dibuka dan teks sudah English
+    await page.addInitScript(spy + 'localStorage.clear(); window.__override = { loadPrefs: () => ({ t: 1, name: "Ali", voice: "en", settings: {} }) };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 3000 });
+    assert.strictEqual(await page.evaluate(() => window.__sawWait === true), true, 'skrin tidak ditutup');
+    assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), 'Allow location');
+    // 2) server gagal: skrin tetap dibuka (tidak tersekat)
+    await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => { throw new Error("gagal"); } };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 6000 });
+    // 3) storan ada bahasa: tiada penutup langsung
+    await page.addInitScript('localStorage.setItem("jk_voice", "en"); window.__sawWait = false;');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForTimeout(300);
+    assert.strictEqual(await page.evaluate(() => window.__sawWait === true), false);
+  } finally { await close(); }
+});
