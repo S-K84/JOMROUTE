@@ -1069,3 +1069,27 @@ for (const file of FILES) test(`${file}: Tetapan ada "Privasi & data" (BM & Engl
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Carian nama: tekaan jalan dilabel jujur (saluran uji)
+test('IndexUji.html: carian nama yang hanya memberi tekaan jalan memaparkan "tidak dijumpai" + tip tampal pautan; hasil biasa tidak berubah', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(async () => {
+      const w = ms => new Promise(x => setTimeout(x, ms));
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() }); openSearch('go');
+      const run = async (q, res) => {
+        window.__override = { searchPlaces: () => res };
+        $('q').value = q; await doSearch(); await w(200);
+        return $('searchBody').textContent;
+      };
+      return {
+        tekaan: await run('Darul Iman training center', [{ title: 'Jalan Pupuk', sub: 'Anggaran · Kampung Teluk Kalong', lat: 4.2, lng: 103.4, src: 'alamat' }]),
+        biasa: await run('Darul Iman', [{ title: 'Darul Iman', sub: 'Kemaman', lat: 4.2, lng: 103.4, src: 'osm' }])
+      };
+    });
+    assert.match(r.tekaan, /Tempat "Darul Iman training center" tidak dijumpai/);
+    assert.match(r.tekaan, /Jalan Pupuk/); assert.match(r.tekaan, /tampal di sini/);
+    assert.doesNotMatch(r.biasa, /tidak dijumpai|tampal di sini/); assert.match(r.biasa, /Darul Iman/);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
