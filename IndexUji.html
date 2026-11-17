@@ -916,7 +916,7 @@ const VOICE = {
     jam: d => d ? `Kesesakan ${d} di hadapan.` : 'Anda memasuki kawasan sesak.',
     still: l => `${l} di sini. Masih ada?`, faster: m => `Laluan lebih pantas dijumpai. Jimat ${m} minit.`,
     slow: d => d ? `Trafik perlahan ${d} di hadapan.` : 'Trafik perlahan di kawasan ini.',
-    m: 'meter', km: 'kilometer' },
+    m: 'meter', km: 'kilometer', lm: n => `, berhampiran ${n}` },
   en: { code: 'en-GB', prefer: ['en-gb', 'en'], inDist: d => `In ${d}, `, arrive: 'You have arrived at your destination.',
     near: d => `Your destination is ${d} ahead.`, reroute: 'Recalculating route.',
     speeding: 'Caution, you are over the speed limit.', rest: h => `You have been driving for ${h} hours. Take a break.`,
@@ -926,7 +926,7 @@ const VOICE = {
     jam: d => d ? `Traffic jam ${d} ahead.` : 'You are entering a traffic jam.',
     still: l => `${l} here. Is it still there?`, faster: m => `Faster route found. Save ${m} minutes.`,
     slow: d => d ? `Slow traffic ${d} ahead.` : 'Slow traffic in this area.',
-    m: 'metres', km: 'kilometres' }
+    m: 'metres', km: 'kilometres', lm: n => `, near ${n}` }
 };
 const TYPE_EN = { POLIS: 'police', KEMALANGAN: 'an accident', SESAK: 'heavy traffic', BAHAYA: 'a hazard', BANJIR: 'flooding',
   LUBANG: 'a pothole', KERJA_JALAN: 'road works', KAMERA: 'a speed camera', KENDERAAN_ROSAK: 'a broken-down vehicle' };
@@ -3524,7 +3524,7 @@ function onNavTick() {
     const d = next.at - loc.along, said = state.spoken[k + 1] || (state.spoken[k + 1] = {});
     if (d <= 40 && !said.now) { said.now = said.near = said.far = 1; speak(next.text, 'turn'); }
     else if (d <= 300 && !said.near && (r.steps[k].distM || 0) > 400) {
-      said.near = said.far = 1; speak(VOICE[voiceLang].inDist(sayDist(d)) + next.text, 'turnEarly');
+      said.near = said.far = 1; speak(VOICE[voiceLang].inDist(sayDist(d)) + next.text + (next.lm ? VOICE[voiceLang].lm(next.lm) : ''), 'turnEarly');
     } else if (d <= 800 && !said.far && (r.steps[k].distM || 0) > 1500) {
       said.far = 1; speak(VOICE[voiceLang].inDist(sayDist(d)) + next.text, 'turnEarly');
     }
@@ -4401,8 +4401,27 @@ function prefetchRouteData(r) {
     pts.push(slicePts(r, r.total, r.total)[0]);
     const boxes = routeBoxes(pts, 300), none = () => null;
     hadTilesFor(boxes).catch(none);
-    Object.keys(ALONG_Q).reduce((p, c) => p.then(() => poiTilesFor(c, boxes).catch(none)), Promise.resolve());
+    Object.keys(ALONG_Q).reduce((p, c) => p.then(() => poiTilesFor(c, boxes).catch(none)), Promise.resolve())
+      .then(() => loadLandmarks(r)).catch(none);
   }, 3000);
+}
+const LM_CATS = ['fuel', 'mosque'], LM_M = 40;
+/** Tempat bernama (stesen minyak/masjid) paling dekat dengan titik belok, dalam LM_M meter; '' jika tiada. Fungsi tulen. */
+function landmarkFor(pt, pois) {
+  let best = '', bd = LM_M;
+  pois.forEach(p => {
+    const d = p.title && p.title.length <= 40 ? dist(pt, p) : Infinity;
+    if (d < bd) { bd = d; best = p.title; }
+  });
+  return best;
+}
+/** Letak nama mercu tanda pada setiap langkah laluan (hanya dari data POI yang sudah ada dalam ingatan; senyap jika tiada). */
+function loadLandmarks(r) {
+  const boxes = routeBoxes(r.steps.map(s => [s.lat, s.lng]), LM_M + 20);
+  return Promise.all(LM_CATS.map(c => poiTilesFor(c, boxes).then(t => t ? poiElements(t, boxes) : [], () => []))).then(l => {
+    const pois = [].concat.apply([], l);
+    r.steps.forEach((s, i) => { if (i > 0) s.lm = landmarkFor(s, pois); });
+  });
 }
 const poiAlong = (cat, pts) => ALONG_Q[cat] ? loadPoi(cat, routeBoxes(pts, ALONG_Q[cat][1])) : Promise.resolve(null);
 const poiNear = (cat, me) => loadPoi(cat, [[me.lat - 0.08, me.lng - 0.08, me.lat + 0.08, me.lng + 0.08].map(v => v.toFixed(3)).join(',')]);
