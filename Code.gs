@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.16-s';
+const APP_VERSION = '2026.11.17-a';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -1794,14 +1794,16 @@ function nearbyPlaces(token, cat, lat, lng) {
 // Pengguna Google mencadang kamera di lokasi mereka. Cadangan menunggu dalam Sheet; pemilik menyemaknya di panel pentadbir,
 // menyalin baris CSV ke data/kamera-tambahan.csv (melalui PR) atau membuangnya. Tiada kesan terus pada peta pengguna lain.
 const SHEET_CAMSUG = 'CadanganKamera';
-const CAMSUG_HEADERS = ['ID', 'PenggunaID', 'Nama', 'Lat', 'Lng', 'Catatan', 'Masa', 'Bilangan'];
+const CAMSUG_HEADERS = ['ID', 'PenggunaID', 'Nama', 'Lat', 'Lng', 'Catatan', 'Masa', 'Bilangan', 'Jenis'];   // Jenis: kosong = cadangan kamera baharu, 'tiada' = kamera sedia ada dilaporkan sudah tiada (Catatan = id kamera)
 const CAMSUG_NEAR_M_ = 50;   // cadangan dalam jarak ini digabung (kira Bilangan), bukan baris baharu
 
 function camSugSheet_() {
   const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
   if (!id) throw new Error('Sistem belum disediakan.');
   const ss = SpreadsheetApp.openById(id);
-  return ss.getSheetByName(SHEET_CAMSUG) || ensureSheet_(ss, SHEET_CAMSUG, CAMSUG_HEADERS);
+  const sh = ss.getSheetByName(SHEET_CAMSUG) || ensureSheet_(ss, SHEET_CAMSUG, CAMSUG_HEADERS);
+  if (sh.getRange(1, 9).getValue() !== 'Jenis') sh.getRange(1, 9).setValue('Jenis').setFontWeight('bold');   // sheet lama tanpa lajur Jenis
+  return sh;
 }
 
 function suggestCamera(token, r) {
@@ -1811,21 +1813,25 @@ function suggestCamera(token, r) {
   if (!isValidCoord_(lat, lng)) throw new Error('Lokasi tidak sah.');
   try { rateLimitAll_([['camSug', userId], ['G_camSug']], 1); }
   catch (e) { throw new Error(/Terlalu banyak/.test(e.message) ? 'Terlalu banyak cadangan kamera dihantar. Cuba lagi dalam beberapa jam.' : e.message); }
-  const note = cell_(r.note, 100), name = cell_(r.name, 30) || 'Tanpa Nama';
+  // gone: kamera sedia ada (id dari data titik, cth. cam-123 atau cam--5) dilaporkan sudah tiada
+  const gone = r.gone === true, camId = gone ? String(r.camId || '') : '';
+  if (gone && !/^cam--?\d{1,12}$/.test(camId)) throw new Error('Kamera tidak sah.');
+  const note = gone ? camId : cell_(r.note, 100), name = cell_(r.name, 30) || 'Tanpa Nama';
   const lock = lock_();
   try {
     const sh = camSugSheet_(), last = sh.getLastRow();
     const rows = last >= 2 ? sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues() : [];
-    const i = rows.findIndex(x => distKm_(Number(x[3]), Number(x[4]), lat, lng) * 1000 <= CAMSUG_NEAR_M_);
+    const i = rows.findIndex(x => gone ? String(x[8]) === 'tiada' && String(x[5]) === camId
+      : String(x[8]) !== 'tiada' && distKm_(Number(x[3]), Number(x[4]), lat, lng) * 1000 <= CAMSUG_NEAR_M_);
     if (i >= 0) {
-      if (String(rows[i][1]).split(',').indexOf(userId) >= 0) throw new Error('Anda sudah mencadang kamera di sini.');
+      if (String(rows[i][1]).split(',').indexOf(userId) >= 0) throw new Error(gone ? 'Anda sudah melaporkan kamera ini.' : 'Anda sudah mencadang kamera di sini.');
       // Cadangan orang lain di tempat yang sama: tambah bilangan sahaja (lebih ramai mencadang = lebih meyakinkan)
       sh.getRange(i + 2, 2).setValue(rows[i][1] + ',' + userId);
       sh.getRange(i + 2, 8).setValue(Number(rows[i][7]) + 1);
       return { ok: true, merged: true };
     }
     if (rows.length >= CONFIG.MAX_CAM_SUGG) throw new Error('Senarai cadangan penuh. Cuba lagi nanti.');
-    sh.appendRow([Utilities.getUuid(), userId, name, lat, lng, note, new Date(), 1]);
+    sh.appendRow([Utilities.getUuid(), userId, name, lat, lng, note, new Date(), 1, gone ? 'tiada' : '']);
     return { ok: true, merged: false };
   } finally {
     lock.releaseLock();
@@ -1837,7 +1843,7 @@ function adminCamSuggestions_() {
   if (last < 2) return [];
   return sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues()
     .map(x => ({ id: String(x[0]), name: String(x[2] || ''), lat: Number(x[3]), lng: Number(x[4]), note: String(x[5] || ''),
-      time: new Date(x[6]).getTime(), count: Number(x[7]) || 1 }))
+      time: new Date(x[6]).getTime(), count: Number(x[7]) || 1, gone: String(x[8]) === 'tiada' }))
     .sort((a, b) => b.count - a.count || b.time - a.time).slice(0, 100);
 }
 
