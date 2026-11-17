@@ -149,3 +149,19 @@ for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: kamera disemb
   assert.deepStrictEqual(JSON.parse(JSON.stringify(out.map(e => e.id))), [12, -1000002, 99]);   // 11 & -1000001 dibuang; lampu isyarat tidak terjejas
   assert.match(s2, /call\('getHiddenCameras', token\)/);
 });
+
+test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 300 m sahaja (saluran uji)', () => {
+  const s2 = clientScript('IndexUji.html');
+  const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
+  const c = {};
+  vm.runInNewContext('const LM_M = 40;' + f('dist') + f('landmarkFor') + ';this.f = landmarkFor;', c);
+  const pt = { lat: 3.1, lng: 101.7 };
+  assert.strictEqual(c.f(pt, [{ title: 'Petronas', lat: 3.1001, lng: 101.7 }, { title: 'Jauh', lat: 3.11, lng: 101.7 }]), 'Petronas');
+  assert.strictEqual(c.f(pt, [{ title: 'Jauh', lat: 3.11, lng: 101.7 }]), '');
+  assert.strictEqual(c.f(pt, [{ title: 'X'.repeat(41), lat: 3.1, lng: 101.7 }]), '');
+  for (const file of ['IndexUji.html']) {
+    const t = clientScript(file);
+    assert.match(t, /next\.text \+ \(next\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turnEarly'/, file);
+    assert.match(t, /\.then\(\(\) => loadLandmarks\(r\)\)/, file);
+  }
+});
