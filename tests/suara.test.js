@@ -124,8 +124,8 @@ test('kamera diterima: loadAcceptedCams dipanggil sebaik token ada dan hanya men
   assert.match(s2, /p\[2\] < 0\)\.slice\(0, 300\)/);
 });
 
-test('carian nama: hanya tekaan geocoder tanpa perkataan carian → "tidak dijumpai"; nama sepadan, hasil OSM atau alamat bernombor → tiada amaran', () => {
-  const s2 = clientScript('IndexUji.html');
+for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: carian nama: hanya tekaan geocoder tanpa perkataan carian → "tidak dijumpai"; nama sepadan, hasil OSM atau alamat bernombor → tiada amaran`, () => {
+  const s2 = clientScript(file);
   const m = s2.match(/\/\*\* Semua hasil ialah tekaan geocoder[\s\S]*?\n\}/)[0];
   const c = {};
   vm.runInNewContext(m + ';this.f = onlyGuess;', c);
