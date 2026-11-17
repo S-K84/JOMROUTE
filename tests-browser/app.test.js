@@ -1088,3 +1088,19 @@ test('IndexUji.html: lapor dengan suara — padanan kata kunci menghantar lapora
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Halaman "Privasi & data" dalam Tetapan (saluran uji)
+test('IndexUji.html: Tetapan ada "Privasi & data" (BM & English); mod halimunan dan pautan padam data ada di dalamnya', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      const out = {};
+      out.root = PAGES.root().html.includes('Privasi &amp; data') || PAGES.root().html.includes('Privasi & data');
+      voiceLang = 'ms'; const ms = PAGES.privacy(); out.ms = ms.html.includes('dikaburkan ~100 m') && ms.html.includes('data-toggle="hidden"') && ms.html.includes('data-go="account"');
+      voiceLang = 'en'; const en = PAGES.privacy(); out.en = en.html.includes('blurred to ~100 m') && !/dikaburkan/.test(en.html);
+      return out;
+    });
+    assert.deepStrictEqual(r, { root: true, ms: true, en: true });
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
