@@ -1055,8 +1055,8 @@ for (const file of FILES) test(`${file}: zon kerap ada polis — diamaran sekali
 });
 
 // ---- Halaman "Privasi & data" dalam Tetapan (saluran uji)
-test('IndexUji.html: Tetapan ada "Privasi & data" (BM & English); mod halimunan dan pautan padam data ada di dalamnya', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: Tetapan ada "Privasi & data" (BM & English); mod halimunan dan pautan padam data ada di dalamnya`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       const out = {};

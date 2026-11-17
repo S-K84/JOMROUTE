@@ -7,7 +7,7 @@ const { ROOT } = require('./helpers');
 const code = fs.readFileSync(path.join(ROOT, 'Code.gs'), 'utf8');
 const num = re => Number((code.match(re) || [])[1]);
 
-for (const file of ['IndexUji.html']) test(`${file}: teks privasi sepadan dengan pemalar server (kedudukan 3 min, 15 km, statistik 1 tahun, tetapan 180 hari, kamera 90 hari, zon 180 hari)`, () => {
+for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: teks privasi sepadan dengan pemalar server (kedudukan 3 min, 15 km, statistik 1 tahun, tetapan 180 hari, kamera 90 hari, zon 180 hari)`, () => {
   const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
   const page = html.slice(html.indexOf('privacy: () => {'), html.indexOf('root: () => ({ title'));
   assert.ok(page.length > 500, 'halaman privasi tiada');
