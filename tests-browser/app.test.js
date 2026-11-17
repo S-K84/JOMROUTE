@@ -881,8 +881,8 @@ for (const file of FILES) test(`${file}: storan kosong, server lambat — telefo
 });
 
 // ---- Server menjawab selepas ~6 s (rakaman pemilik): penutup masih ada, kad lokasi tidak sempat terpapar cerah/BM
-test('IndexUji.html: storan kosong, server jawab selepas 6 s — penutup kekal sehingga tetapan sampai', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: storan kosong, server jawab selepas 6 s — penutup kekal sehingga tetapan sampai`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => new Promise(r => setTimeout(() => r({ t: 1, name: "Ali", voice: "en", settings: { dark: "always" } }), 6000)) };');
     await page.reload();
