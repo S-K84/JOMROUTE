@@ -150,7 +150,7 @@ for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: kamera disemb
   assert.match(s2, /call\('getHiddenCameras', token\)/);
 });
 
-test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 300 m sahaja (saluran uji)', () => {
+test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 300 m sahaja (kedua-dua fail)', () => {
   const s2 = clientScript('IndexUji.html');
   const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
   const c = {};
@@ -159,7 +159,7 @@ test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 
   assert.strictEqual(c.f(pt, [{ title: 'Petronas', lat: 3.1001, lng: 101.7 }, { title: 'Jauh', lat: 3.11, lng: 101.7 }]), 'Petronas');
   assert.strictEqual(c.f(pt, [{ title: 'Jauh', lat: 3.11, lng: 101.7 }]), '');
   assert.strictEqual(c.f(pt, [{ title: 'X'.repeat(41), lat: 3.1, lng: 101.7 }]), '');
-  for (const file of ['IndexUji.html']) {
+  for (const file of files) {
     const t = clientScript(file);
     assert.match(t, /next\.text \+ \(next\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turnEarly'/, file);
     assert.match(t, /\.then\(\(\) => loadLandmarks\(r\)\)/, file);
