@@ -93,3 +93,32 @@ test('laporan "kamera tiada": id kamera tidak sah ditolak; tetamu ditolak', () =
   for (const bad of ['', 'abc', 'cam-', 'cam-12a', '=cmd', 'cam-1234567890123']) assert.throws(() => ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng, gone: true, camId: bad }), /Kamera tidak sah/, bad);
   assert.throws(() => ctx.suggestCamera('a_0123456789abcdef0123', { lat: P.lat, lng: P.lng, gone: true, camId: 'cam-1' }), /Log masuk akaun Google/);
 });
+
+test('terima cadangan: masuk KameraDiterima, cadangan dibuang, cache dikemas kini, semua pengguna (termasuk tetamu) boleh membaca', () => {
+  const env = loadCode(), { ctx } = env;
+  assert.strictEqual(JSON.stringify(ctx.getAcceptedCameras('a_0123456789abcdef0123')), '[]');   // tetamu boleh membaca; cache kosong disimpan
+  ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng, name: 'Ali', note: 'Depan sekolah' });
+  env.session.email = env.session.owner;
+  const id = ctx.adminOverview('g_X').camSug[0].id;
+  assert.strictEqual(ctx.adminAcceptCamera('g_X', id).ok, true);
+  assert.strictEqual(ctx.adminOverview('g_X').camSug.length, 0);
+  const list = ctx.getAcceptedCameras('a_0123456789abcdef0123');                                 // cache lama dibuang
+  assert.strictEqual(list.length, 1);
+  assert.ok(Math.abs(list[0][0] - P.lat) < 1e-9 && Math.abs(list[0][1] - P.lng) < 1e-9);
+  assert.match(String(list[0][2]), /^-\d{7,10}$/);                                              // id negatif besar: sepadan dengan /^cam--?\d{1,12}$/ di server
+  assert.strictEqual(env.sheet('SHEET_CAMOK').getRange(2, 4, 1, 1).getValues()[0][0], 'Depan sekolah');
+  assert.throws(() => ctx.adminAcceptCamera('g_X', id), /Cadangan tidak dijumpai/);               // sudah diterima
+});
+
+test('terima cadangan: hanya pemilik; laporan "tiada" tidak boleh diterima; had senarai', () => {
+  const env = loadCode(), { ctx } = env;
+  ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng });
+  ctx.suggestCamera('g_B', { lat: P.lat + 0.1, lng: P.lng, gone: true, camId: 'cam-5' });
+  assert.throws(() => ctx.adminAcceptCamera('g_X', '0123abcd-0123'), /Tidak dibenarkan/);
+  env.session.email = env.session.owner;
+  const d = ctx.adminOverview('g_X').camSug;
+  assert.throws(() => ctx.adminAcceptCamera('g_X', d.find(x => x.gone).id), /Cadangan tidak dijumpai/);
+  assert.throws(() => ctx.adminAcceptCamera('g_X', 'bukan-id!'), /Cadangan tidak dijumpai/);
+  require('vm').runInContext('CONFIG.MAX_CAM_OK = 0', ctx);
+  assert.throws(() => ctx.adminAcceptCamera('g_X', d.find(x => !x.gone).id), /Senarai kamera diterima penuh/);
+});
