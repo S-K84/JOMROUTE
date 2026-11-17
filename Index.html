@@ -4375,7 +4375,7 @@ function updateRoadLimit() {
     })
       .finally(() => { setTimeout(() => { state.slBusy = false; }, Math.max(0, (state.slRetryAt || 0) - Date.now())); });
   }
-  if (state.slRoute === r) { checkCameras(along); renderSignals(along); }
+  if (state.slRoute === r) { checkCameras(along); checkCamGone(along); renderSignals(along); }
   if (S.speedLimit !== -1) return;
   const v = state.slRoute === r ? speedAt(state.slInt, along) : 0;
   if (v) { state.roadLimit = v; state.roadLimitAt = along; }
@@ -4462,9 +4462,27 @@ function checkCameras(along) {
   const cam = nextCamera(state.cams || [], along, warnM, state.alerted);
   if (!cam || (cam.lat != null && nearAlertedCam(cam))) return;   // sudah diamaran sebagai laporan pengguna
   noteCamAlert(cam);
+  if (cam.lat != null && !/^a_/.test(token || '')) (state.camPass = state.camPass || []).push({ id: cam.id, a: cam.a, lat: cam.lat, lng: cam.lng, navId: state.navId });
   const d = cam.a - along;
   toast(`📷 Kamera laju · ${fmtDist(d)}`, true);
   speak(VOICE[voiceLang].camera(sayDist(d)), 'hazard');
+}
+/** Selepas melepasi kamera yang diamaran (80 m): tanya "masih ada?" (8 s). "Tiada" dihantar kepada pemilik; tiada jawapan = tiada tindakan. */
+const CAM_ASK_KEEP_MS = 7 * 86400000;
+function checkCamGone(along) {
+  const list = state.camPass;
+  if (!list || !list.length || askBusy()) return;
+  const i = list.findIndex(c => c.navId !== state.navId || along > c.a + 80);
+  if (i < 0) return;
+  const c = list.splice(i, 1)[0];
+  if (c.navId !== state.navId) return;
+  const now = Date.now(), asked = getJSON('jk_camasked', {});
+  if (asked[c.id] && now - asked[c.id] < CAM_ASK_KEEP_MS) return;
+  asked[c.id] = now;
+  store.set('jk_camasked', JSON.stringify(Object.keys(asked).sort((x, y) => asked[y] - asked[x]).slice(0, 100).reduce((o, k) => (o[k] = asked[k], o), {})));
+  showAsk({ icon: '📷', text: 'Kamera tadi masih ada?', sub: 'Bantu kemas kini data kamera', yes: 'Ada', no: 'Tiada', ms: 8000,
+    onNo: () => call('suggestCamera', token, { gone: true, camId: c.id, lat: c.lat, lng: c.lng, name: userName })
+      .then(() => toast('Terima kasih! Laporan dihantar.'), () => {}) });
 }
 /** Had laju yang digunakan: tetapan sendiri, atau had jalan (Automatik, semasa navigasi sahaja). */
 function curLimit() {
@@ -4771,10 +4789,10 @@ function renderAdmin(d) {
         <button class="warn" data-adm="del" data-id="${esc(x.id)}">🗑️ Padam</button>
         <button class="warn" data-adm="ban" data-id="${esc(x.user)}">🚫 Sekat pengguna</button></div></div>`;
   }).join('') || '<div class="hint">Tiada laporan aktif.</div>';
-  const cams = (d.camSug || []).map(x => `<div class="adm-row"><div class="t">📷 ${Number(x.lat).toFixed(5)}, ${Number(x.lng).toFixed(5)}${Number(x.count) > 1 ? ' · 👥' + Number(x.count) : ''}</div>
+  const cams = (d.camSug || []).map(x => `<div class="adm-row"><div class="t">${x.gone ? '🚫 Kamera dilaporkan tiada · ' + esc(x.note) : '📷'} ${Number(x.lat).toFixed(5)}, ${Number(x.lng).toFixed(5)}${Number(x.count) > 1 ? ' · 👥' + Number(x.count) : ''}</div>
       <div class="m">${esc(x.name || 'Tanpa Nama')} · ${ago(x.time)}</div>
       <div class="adm-act"><button data-adm="cview" data-id="${esc(x.id)}">🗺️ Lihat</button>
-        <button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>
+        ${x.gone ? '' : `<button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>`}
         <button class="warn" data-adm="cdone" data-id="${esc(x.id)}">✅ Selesai (buang)</button></div></div>`).join('')
     || '<div class="hint">Tiada cadangan kamera.</div>';
   const banned = (d.banned || []).map(u => `<div class="adm-row"><div class="t">${esc(u)}</div>

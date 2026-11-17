@@ -978,7 +978,7 @@ for (const file of FILES) test(`${file}: semua halaman tetapan guna ikon garisan
 });
 
 // ---- Selepas melepasi kamera yang diamaran: kad "Kamera tadi masih ada?"; "Tiada" dihantar kepada pemilik (saluran uji)
-for (const file of ['IndexUji.html']) test(`${file}: kad "Kamera tadi masih ada?" selepas melepasi kamera; "Tiada" lapor ke server; tidak ditanya lagi dalam 7 hari`, async () => {
+for (const file of FILES) test(`${file}: kad "Kamera tadi masih ada?" selepas melepasi kamera; "Tiada" lapor ke server; tidak ditanya lagi dalam 7 hari`, async () => {
   const { page, errors, close } = await open(file);
   try {
     await startNav(page);
