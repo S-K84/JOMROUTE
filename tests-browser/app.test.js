@@ -874,10 +874,24 @@ for (const file of FILES) test(`${file}: storan kosong, server lambat — telefo
       await page.addInitScript(`localStorage.clear(); Object.defineProperty(navigator, "language", { get: () => "${lang}" }); window.__override = { loadPrefs: () => new Promise(() => {}) };`);
       await page.reload();
       await page.waitForFunction(() => window.__appStarted === true);
-      await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 6000 });
+      await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 13000 });
       assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), want, lang);
     } finally { await close(); }
   }
+});
+
+// ---- Server menjawab selepas ~6 s (rakaman pemilik): penutup masih ada, kad lokasi tidak sempat terpapar cerah/BM
+test('IndexUji.html: storan kosong, server jawab selepas 6 s — penutup kekal sehingga tetapan sampai', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => new Promise(r => setTimeout(() => r({ t: 1, name: "Ali", voice: "en", settings: { dark: "always" } }), 6000)) };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForTimeout(5500);
+    assert.strictEqual(await page.evaluate(() => !!document.getElementById('langWait')), true, 'penutup dibuka terlalu awal');
+    await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 4000 });
+    assert.strictEqual(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+  } finally { await close(); }
 });
 
 // ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
