@@ -123,3 +123,19 @@ test('kamera diterima: loadAcceptedCams dipanggil sebaik token ada dan hanya men
   assert.match(s2, /call\('getAcceptedCameras', token\)/);
   assert.match(s2, /p\[2\] < 0\)\.slice\(0, 300\)/);
 });
+
+test('carian nama: hanya tekaan geocoder tanpa perkataan carian → "tidak dijumpai"; nama sepadan, hasil OSM atau alamat bernombor → tiada amaran', () => {
+  const s2 = clientScript('IndexUji.html');
+  const m = s2.match(/\/\*\* Semua hasil ialah tekaan geocoder[\s\S]*?\n\}/)[0];
+  const c = {};
+  vm.runInNewContext(m + ';this.f = onlyGuess;', c);
+  const guess = (title, sub) => ({ title, sub: 'Anggaran · ' + sub, src: 'alamat' });
+  assert.strictEqual(c.f('Darul Iman training center', [guess('Jalan Pupuk', 'Kampung Teluk Kalong, 24000 Kemaman')]), true);
+  assert.strictEqual(c.f('Jalan Pupuk', [guess('Jalan Pupuk', 'Kampung Teluk Kalong')]), false);          // pengguna memang cari jalan itu
+  assert.strictEqual(c.f('taman melawati', [guess('Taman Melawati', 'Kuala Lumpur')]), false);
+  assert.strictEqual(c.f('Darul Iman', [{ title: 'Darul Iman', sub: 'Kemaman', src: 'osm' }]), false);      // hasil OSM sebenar
+  assert.strictEqual(c.f('Darul Iman', [guess('Jalan Pupuk', 'Kemaman'), { title: 'X', sub: 'Y', src: 'osm' }]), false);   // campuran
+  assert.strictEqual(c.f('Darul Iman', [{ title: 'Jalan IK 3', sub: 'Bangi', src: 'alamat' }]), false);     // alamat tepat (bukan Anggaran)
+  assert.strictEqual(c.f('Darul Iman', []), false);
+  assert.strictEqual(c.f('ab', [guess('Jalan Pupuk', 'Kemaman')]), true);                                   // perkataan < 3 huruf diabaikan
+});

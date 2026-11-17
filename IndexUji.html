@@ -1360,6 +1360,7 @@ const EN = {
   '✅ Terima': '✅ Accept', '✅ Kamera diterima. Pengguna nampak dalam beberapa minit.': '✅ Camera accepted. Users will see it within minutes.',
   'Senarai kamera diterima penuh.': 'The accepted cameras list is full.',
   'Privasi & data': 'Privacy & data', 'Padam data saya': 'Delete my data', 'Lokasi, tetapan, tempat & sejarah carian': 'Location, settings, places & search history',
+  '💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.': '💡 Find the place in Google Maps, tap Share → Copy link, then paste it here.',
   'Terlalu banyak carian sejak sejam lalu. Cuba lagi dalam beberapa minit.': 'Too many searches in the last hour. Try again in a few minutes.',
   'Anda hampir sampai di destinasi.': 'You are almost at your destination.', 'Batal titik singgah': 'Cancel stop',
   'Tiada dijumpai dalam 60 km di hadapan, di sebelah jalan anda.': 'Nothing found in the next 60 km on your side of the road.',
@@ -1493,6 +1494,7 @@ const EN_RULES = [
   [/^⚠️ (\d+) kemalangan(?: · (.+))?$/, m => '⚠️ ' + m[1] + ' accident' + (m[1] === '1' ? '' : 's') + (m[2] ? ' · ' + tr(m[2]) : '')],
   [/^🔴 sesak (.+)$/, m => '🔴 jam ' + m[1]], [/^🟠 perlahan (.+)$/, m => '🟠 slow ' + m[1]],
   [/^🌧️ Hujan lebat dijangka · (.+) di hadapan$/, m => '🌧️ Heavy rain expected · ' + m[1] + ' ahead'],
+  [/^Tempat "(.+)" tidak dijumpai\. Ini hanya jalan yang paling hampir \(anggaran\)\.$/, m => 'Place "' + m[1] + '" was not found. This is only the nearest road (approximate).'],
   [/^👮 Kawasan sering ada polis · (.+)$/, m => '👮 Police often reported here · ' + m[1]], [/^📷 Kawasan sering ada kamera · (.+)$/, m => '📷 Speed cameras often reported here · ' + m[1]],
   [/^⛈️ Ribut petir dijangka · (.+) di hadapan$/, m => '⛈️ Thunderstorm expected · ' + m[1] + ' ahead'],
   [/^☕ Anda sudah memandu (\d+) jam\. Berehatlah sebentar\.$/, m => '☕ You have been driving for ' + m[1] + ' hours. Take a break.'],
@@ -1971,6 +1973,13 @@ function renderSuggestions() {
 // Pautan atau koordinat yang ditampal (WhatsApp, Google Maps, Waze, Apple Maps)
 const looksLikeLocation = q => /https?:\/\/|geo:/i.test(q) || /^-?\d{1,2}\.\d+\s*,\s*-?\d{1,3}\.\d+$/.test(q);
 
+/** Semua hasil ialah tekaan geocoder (alamat, "Anggaran") dan tiada perkataan carian dalam nama/alamatnya → tempat sebenar tidak dijumpai. */
+function onlyGuess(q, res) {
+  if (!res.length || !res.every(p => p.src === 'alamat' && /^Anggaran · /.test(p.sub || ''))) return false;
+  const words = String(q).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+  const hay = res.map(p => (p.title + ' ' + p.sub).toLowerCase()).join(' ');
+  return !words.some(w => hay.includes(w));
+}
 async function doSearch() {
   const q = $('q').value.trim(); if (!q) { renderSuggestions(); return; }
   const box = $('searchBody'), req = state.searchReq = (state.searchReq || 0) + 1;
@@ -1994,8 +2003,12 @@ async function doSearch() {
     const me = state.me;
     const res = await call('searchPlaces', token, q, me ? me.lat : null, me ? me.lng : null);
     if (stale()) return;
+    const rows = res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '')).join('');
     box.innerHTML = res.length
-      ? res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '')).join('')
+      ? (onlyGuess(q, res)
+        ? `<div class="hint" style="padding:12px 4px 4px; text-align:left">Tempat "${esc(q)}" tidak dijumpai. Ini hanya jalan yang paling hampir (anggaran).</div>${rows}` +
+          '<div class="hint" style="padding:8px 4px; text-align:left; font-size:14px">💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.</div>'
+        : rows)
       : '<div class="hint">Tiada hasil. Cuba tambah nama kawasan, cth. "P&C Kitchen Bandar Serenia".</div>';
   } catch (e) { if (!stale()) box.innerHTML = '<div class="hint">' + esc(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || e)) + '</div>'; }
 }
