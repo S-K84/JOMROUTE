@@ -903,7 +903,8 @@ let token = null;
 let hidden = store.get('jk_hidden') === '1';
 let userName = store.get('jk_name');
 let soundOn = store.get('jk_sound') !== '0';
-let voiceLang = store.get('jk_voice') === 'en' ? 'en' : 'ms';
+// Storan kosong (iPhone): teka dari bahasa telefon (bukan ms/id → English) supaya BM tidak terpapar bila server lambat
+let voiceLang = (v => v == null ? (/^(ms|id)\b/i.test(navigator.language || 'ms') ? 'ms' : 'en') : v === 'en' ? 'en' : 'ms')(store.get('jk_voice'));
 
 // Frasa suara dalam dua bahasa. Arahan belokan itu sendiri datang dari Google dalam bahasa yang sama.
 const VOICE = {

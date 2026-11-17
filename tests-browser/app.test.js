@@ -866,6 +866,20 @@ for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingg
   } finally { await close(); }
 });
 
+// ---- Storan kosong + server lambat (> 4 s): teka bahasa dari telefon, jangan tunjuk BM kepada pengguna English
+test('IndexUji.html: storan kosong, server lambat — telefon English kekal English; telefon BM kekal BM', async () => {
+  for (const [lang, want] of [['en-US', 'Allow location'], ['ms-MY', 'Benarkan lokasi']]) {
+    const { page, errors, close } = await open('IndexUji.html');
+    try {
+      await page.addInitScript(`localStorage.clear(); Object.defineProperty(navigator, "language", { get: () => "${lang}" }); window.__override = { loadPrefs: () => new Promise(() => {}) };`);
+      await page.reload();
+      await page.waitForFunction(() => window.__appStarted === true);
+      await page.waitForFunction(() => !document.getElementById('langWait'), null, { timeout: 6000 });
+      assert.strictEqual(await page.evaluate(() => document.getElementById('locTitle').textContent), want, lang);
+    } finally { await close(); }
+  }
+});
+
 // ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
 for (const file of FILES) test(`${file}: mesej WhatsApp ikut bahasa tetapan (English / BM)`, async () => {
   const { page, errors, close } = await open(file);
