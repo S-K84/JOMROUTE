@@ -1071,8 +1071,8 @@ for (const file of FILES) test(`${file}: Tetapan ada "Privasi & data" (BM & Engl
 });
 
 // ---- Carian nama: tekaan jalan dilabel jujur (saluran uji)
-test('IndexUji.html: carian nama yang hanya memberi tekaan jalan memaparkan "tidak dijumpai" + tip tampal pautan; hasil biasa tidak berubah', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: carian nama yang hanya memberi tekaan jalan memaparkan "tidak dijumpai" + tip tampal pautan; hasil biasa tidak berubah`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(async () => {
       const w = ms => new Promise(x => setTimeout(x, ms));
