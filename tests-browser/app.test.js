@@ -1093,3 +1093,26 @@ for (const file of FILES) test(`${file}: carian nama yang hanya memberi tekaan j
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Panel pentadbir: "Buang kamera ini" hanya pada laporan kamera tiada (saluran uji)
+test('IndexUji.html: panel pentadbir — Buang kamera ini hanya pada laporan "tiada"; tekan dua kali memanggil adminRemoveCamera', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      window.__rm = [];
+      window.__override = {
+        adminOverview: () => ({ activeUsers: 1, usersHour: 1, reports: 0, reportsDay: 0, shares: 0, byType: {}, quota: [], recent: [], banned: [],
+          camSug: [{ id: 'abcdef12-0001', name: 'Ali', lat: 3.1, lng: 101.7, note: '', time: Date.now(), count: 1, gone: false },
+                   { id: 'abcdef12-0002', name: 'Ali', lat: 3.2, lng: 101.7, note: 'cam-5', time: Date.now(), count: 1, gone: true }] }),
+        adminRemoveCamera: a => { __rm.push(a[1]); return { ok: true, hidden: true }; }
+      };
+      state.isOwner = true; openAdmin();
+    });
+    await page.waitForFunction(() => $('adminBody').querySelector('[data-adm="cremove"]'));
+    assert.strictEqual(await page.evaluate(() => $('adminBody').querySelectorAll('[data-adm="cremove"]').length), 1);
+    await page.click('[data-adm="cremove"]'); await page.click('[data-adm="cremove"]');
+    await page.waitForFunction(() => window.__rm.length === 1);
+    assert.strictEqual(await page.evaluate(() => window.__rm[0]), 'abcdef12-0002');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

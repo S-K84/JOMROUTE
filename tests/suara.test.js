@@ -139,3 +139,13 @@ for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: carian nama: 
   assert.strictEqual(c.f('Darul Iman', []), false);
   assert.strictEqual(c.f('ab', [guess('Jalan Pupuk', 'Kemaman')]), true);                                   // perkataan < 3 huruf diabaikan
 });
+
+test('kamera disembunyikan pemilik (state.camHide) tidak lagi menjadi elemen amaran; kamera lain kekal', () => {
+  const s2 = clientScript('IndexUji.html');
+  const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
+  const c = { state: { camHide: [11, -1000001], camOk: [[3.2, 101.7, -1000001], [3.21, 101.7, -1000002]] } };
+  vm.runInNewContext('const state = this.state;' + f('titikElements') + ';this.f = titikElements;', c);
+  const out = c.f({ c: [[3.1, 101.7, 11], [3.11, 101.7, 12]], s: [[3.1, 101.7, 99]] }, ['3,101,3.5,102']);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(out.map(e => e.id))), [12, -1000002, 99]);   // 11 & -1000001 dibuang; lampu isyarat tidak terjejas
+  assert.match(s2, /call\('getHiddenCameras', token\)/);
+});

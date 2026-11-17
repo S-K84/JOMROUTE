@@ -122,3 +122,48 @@ test('terima cadangan: hanya pemilik; laporan "tiada" tidak boleh diterima; had 
   require('vm').runInContext('CONFIG.MAX_CAM_OK = 0', ctx);
   assert.throws(() => ctx.adminAcceptCamera('g_X', d.find(x => !x.gone).id), /Senarai kamera diterima penuh/);
 });
+
+const gone = (ctx, who, camId) => ctx.suggestCamera(who, { lat: P.lat, lng: P.lng, gone: true, camId });
+
+test('buang kamera: laporan "tiada" bagi kamera OSM → id disembunyikan untuk semua pengguna, laporan dipadam', () => {
+  const env = loadCode(), { ctx } = env;
+  gone(ctx, 'g_A', 'cam-123');
+  env.session.email = env.session.owner;
+  const id = ctx.adminOverview('g_X').camSug[0].id;
+  assert.deepStrictEqual(J2(ctx.getHiddenCameras('a_0123456789abcdef0123')), []);          // tetamu boleh membaca (cache kosong)
+  assert.strictEqual(ctx.adminRemoveCamera('g_X', id).hidden, true);
+  assert.deepStrictEqual(J2(ctx.getHiddenCameras('a_0123456789abcdef0123')), [123]);         // cache dibuang & dikemas kini
+  assert.strictEqual(ctx.adminOverview('g_X').camSug.length, 0);
+  assert.throws(() => ctx.adminRemoveCamera('g_X', id), /Cadangan tidak dijumpai/);
+  gone(ctx, 'g_B', 'cam-123'); env.clock.now += 61000;
+  const id2 = ctx.adminOverview('g_X').camSug[0].id;
+  ctx.adminRemoveCamera('g_X', id2);                                                         // sudah disembunyikan: tiada baris pendua
+  assert.strictEqual(env.sheet('SHEET_CAMHIDE').getLastRow(), 2);
+});
+
+test('buang kamera: kamera yang pernah diterima pemilik dibuang dari KameraDiterima (bukan disembunyikan)', () => {
+  const env = loadCode(), { ctx } = env;
+  ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng, name: 'Ali' });
+  env.session.email = env.session.owner;
+  ctx.adminAcceptCamera('g_X', ctx.adminOverview('g_X').camSug[0].id);
+  const accepted = J2(ctx.getAcceptedCameras('g_X'));
+  assert.strictEqual(accepted.length, 1);
+  gone(ctx, 'g_B', 'cam-' + accepted[0][2]);
+  const id = ctx.adminOverview('g_X').camSug[0].id;
+  assert.strictEqual(ctx.adminRemoveCamera('g_X', id).hidden, false);
+  assert.deepStrictEqual(J2(ctx.getAcceptedCameras('g_X')), []);
+  assert.deepStrictEqual(J2(ctx.getHiddenCameras('g_X')), []);
+});
+
+test('buang kamera: hanya pemilik, hanya laporan "tiada", dan had senarai', () => {
+  const env = loadCode(), { ctx } = env;
+  ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng });          // cadangan baharu (bukan "tiada")
+  gone(ctx, 'g_B', 'cam-9');
+  assert.throws(() => ctx.adminRemoveCamera('g_X', '0123abcd-0123'), /Tidak dibenarkan/);
+  env.session.email = env.session.owner;
+  const d = ctx.adminOverview('g_X').camSug;
+  assert.throws(() => ctx.adminRemoveCamera('g_X', d.find(x => !x.gone).id), /Cadangan tidak dijumpai/);
+  require('vm').runInContext('CONFIG.MAX_CAM_HIDE = 0', ctx);
+  assert.throws(() => ctx.adminRemoveCamera('g_X', d.find(x => x.gone).id), /Senarai kamera disembunyikan penuh/);
+});
+const J2 = v => JSON.parse(JSON.stringify(v));
