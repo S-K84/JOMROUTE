@@ -911,7 +911,7 @@ const VOICE = {
     near: d => `Destinasi anda ${d} di hadapan.`, reroute: 'Mengira semula laluan.',
     speeding: 'Awas, anda melebihi had laju.', rest: h => `Anda sudah memandu ${h} jam. Berehatlah sebentar.`,
     rain: d => `Hujan lebat dijangka ${d} di hadapan.`, storm: d => `Ribut petir dijangka ${d} di hadapan.`,
-    prayer: n => `Masuk waktu ${n}.`, prayerSoon: (n, m) => `Waktu ${n} dalam ${m} minit.`, camera: d => `Kamera laju ${d} di hadapan.`, limit: n => `Had laju ${n}.`, child: 'Jangan lupa periksa tempat duduk belakang.', mi: 'batu', ft: 'kaki',
+    prayer: n => `Masuk waktu ${n}.`, prayerSoon: (n, m) => `Waktu ${n} dalam ${m} minit.`, camera: d => `Kamera laju ${d} di hadapan.`, zone: (t, d) => t === 'POLIS' ? `Kawasan ini sering ada sekatan polis, ${d} di hadapan.` : `Kawasan ini sering ada kamera laju, ${d} di hadapan.`, limit: n => `Had laju ${n}.`, child: 'Jangan lupa periksa tempat duduk belakang.', mi: 'batu', ft: 'kaki',
     hazard: (l, d) => `Awas, ${l} dilaporkan ${d} di hadapan.`, test: 'Arahan suara dalam Bahasa Melayu.',
     jam: d => d ? `Kesesakan ${d} di hadapan.` : 'Anda memasuki kawasan sesak.',
     still: l => `${l} di sini. Masih ada?`, faster: m => `Laluan lebih pantas dijumpai. Jimat ${m} minit.`,
@@ -921,7 +921,7 @@ const VOICE = {
     near: d => `Your destination is ${d} ahead.`, reroute: 'Recalculating route.',
     speeding: 'Caution, you are over the speed limit.', rest: h => `You have been driving for ${h} hours. Take a break.`,
     rain: d => `Heavy rain expected ${d} ahead.`, storm: d => `Thunderstorm expected ${d} ahead.`,
-    prayer: n => `It is now time for ${n} prayer.`, prayerSoon: (n, m) => `${n} prayer in ${m} minutes.`, camera: d => `Speed camera ${d} ahead.`, limit: n => `Speed limit ${n}.`, child: 'Remember to check the back seat.', mi: 'miles', ft: 'feet',
+    prayer: n => `It is now time for ${n} prayer.`, prayerSoon: (n, m) => `${n} prayer in ${m} minutes.`, camera: d => `Speed camera ${d} ahead.`, zone: (t, d) => t === 'POLIS' ? `Police are often reported ${d} ahead.` : `Speed cameras are often reported ${d} ahead.`, limit: n => `Speed limit ${n}.`, child: 'Remember to check the back seat.', mi: 'miles', ft: 'feet',
     hazard: (l, d) => `Caution, ${l} reported ${d} ahead.`, test: 'Voice guidance in English.',
     jam: d => d ? `Traffic jam ${d} ahead.` : 'You are entering a traffic jam.',
     still: l => `${l} here. Is it still there?`, faster: m => `Faster route found. Save ${m} minutes.`,
@@ -1492,6 +1492,7 @@ const EN_RULES = [
   [/^⚠️ (\d+) kemalangan(?: · (.+))?$/, m => '⚠️ ' + m[1] + ' accident' + (m[1] === '1' ? '' : 's') + (m[2] ? ' · ' + tr(m[2]) : '')],
   [/^🔴 sesak (.+)$/, m => '🔴 jam ' + m[1]], [/^🟠 perlahan (.+)$/, m => '🟠 slow ' + m[1]],
   [/^🌧️ Hujan lebat dijangka · (.+) di hadapan$/, m => '🌧️ Heavy rain expected · ' + m[1] + ' ahead'],
+  [/^👮 Kawasan sering ada polis · (.+)$/, m => '👮 Police often reported here · ' + m[1]], [/^📷 Kawasan sering ada kamera · (.+)$/, m => '📷 Speed cameras often reported here · ' + m[1]],
   [/^⛈️ Ribut petir dijangka · (.+) di hadapan$/, m => '⛈️ Thunderstorm expected · ' + m[1] + ' ahead'],
   [/^☕ Anda sudah memandu (\d+) jam\. Berehatlah sebentar\.$/, m => '☕ You have been driving for ' + m[1] + ' hours. Take a break.'],
   [/^Anda sudah memandu (\d+) jam$/, m => 'You have been driving for ' + m[1] + ' hours'],
@@ -2928,9 +2929,33 @@ function sameDirection(rep, h) {
 const COMPASS_MS = ['Utara', 'Timur Laut', 'Timur', 'Tenggara', 'Selatan', 'Barat Daya', 'Barat', 'Barat Laut'];
 const compassName = h => COMPASS_MS[Math.round(h / 45) % 8];
 
+/** Zon yang kerap dilaporkan ada polis/kamera oleh ramai pengguna (sejarah laporan, dari server): amaran sekali setiap 30 minit bagi satu zon. */
+const HOT_SAY_MS = 30 * 60000;
+function checkHotspots(me, moving) {
+  const hot = state.hot;
+  if (!hot || !hot.length || !moving || (me.speed || 0) < 30) return;
+  const warn = Number(S.alertDist) || 600, now = Date.now(), said = state.hotSaid || (state.hotSaid = {});
+  for (const h of hot) {
+    const type = h.type === 'P' ? 'POLIS' : 'KAMERA';
+    if (S.alertTypes.indexOf(type) < 0) continue;
+    const d = dist(me, h);
+    if (d > warn || d < 40) continue;
+    let diff = Math.abs(bearing(me, h) - me.heading); if (diff > 180) diff = 360 - diff;
+    if (diff > 60) continue;                                                     // bukan di hadapan
+    const k = h.lat + ',' + h.lng;
+    if (said[k] && now - said[k] < HOT_SAY_MS) continue;
+    said[k] = now;
+    if (state.reports.some(r => r.type === type && dist(r, h) < 300)) continue;   // laporan semasa di situ sudah diamaran
+    if (type === 'KAMERA') { if (nearAlertedCam(h)) continue; noteCamAlert(h); }
+    toast(`${type === 'POLIS' ? '👮 Kawasan sering ada polis' : '📷 Kawasan sering ada kamera'} · ${fmtDist(d)}`, true);
+    speak(VOICE[voiceLang].zone(type, sayDist(d)), 'hazard');
+    return;
+  }
+}
 function checkHazards() {
   const me = state.me; if (!me || S.travel === 'walk') return;   // pejalan kaki: tiada amaran trafik
   const moving = me.heading != null && !isNaN(me.heading) && me.speed > 5;
+  checkHotspots(me, moving);
   state.reports.forEach(r => {
     if (state.alerted.has(r.id) || S.alertTypes.indexOf(r.type) < 0) return;
     const d = dist(me, r);
@@ -5155,6 +5180,14 @@ function offerMigration(oldToken, offer) {
   };
 }
 /** Kamera yang diterima pemilik (cadangan pengguna): format [lat, lng, id], sama seperti titik.json. Gagal = senyap, guna titik.json sahaja. */
+/** Zon kerap ada polis/kamera dari server: [lat, lng, 'P'|'K']. Gagal = senyap. */
+function loadHotspots() {
+  if (!token || offline) return;
+  call('getHotspots', token).then(l => {
+    state.hot = (Array.isArray(l) ? l : []).filter(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]) && (p[2] === 'P' || p[2] === 'K'))
+      .slice(0, 400).map(p => ({ lat: Number(p[0]), lng: Number(p[1]), type: p[2] }));
+  }).catch(() => {});
+}
 function loadAcceptedCams() {
   if (!token || offline) return;
   call('getAcceptedCameras', token).then(l => {
@@ -5163,7 +5196,7 @@ function loadAcceptedCams() {
 }
 call('getSession', prevToken, pendingOld).then(async s => {
   token = s.token; store.set('jk_token', token);
-  loadAcceptedCams();
+  loadAcceptedCams(); loadHotspots();
   state.isOwner = s.owner === true;
   if (TRACK) return startTracking();
   await loadPrefsNow();

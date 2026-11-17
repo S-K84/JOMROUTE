@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.17-d';
+const APP_VERSION = '2026.11.17-e';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -41,6 +41,8 @@ const CONFIG = {
   MAX_SHARES: 500,          // had baris perkongsian perjalanan
   SHARE_MAX_MIN: 360,       // perkongsian paling lama 6 jam (termasuk "sampai destinasi")
   MAX_BANNED: 500,          // had senarai pengguna disekat
+  MAX_HOTSPOTS: 2000,       // had baris zon kerap ada polis/kamera (Sheet ZonRawan)
+  HOTSPOT_MIN_USERS: 3,     // zon diamaran kepada pengguna hanya bila dilaporkan oleh sekurang-kurangnya sekian pengguna berbeza
   MAX_CAM_OK: 300,          // had kamera yang diterima pemilik (dibaca semua pengguna; cache < 100 KB)
   MAX_CAM_SUGG: 300,        // had cadangan kamera yang menunggu semakan pemilik
   CAM_SUGG_RETAIN_DAYS: 90, // cadangan kamera yang tidak disemak dipadam selepas tempoh ini
@@ -56,6 +58,7 @@ const CONFIG = {
     along:     [60, 3600],   G_overpass: [300, 3600], // OpenStreetMap Overpass — perkhidmatan percuma, guna berhemah
     G_photonAlong: [900, 3600], // Photon untuk "Cari di sepanjang laluan" (berasingan daripada carian tempat; hasil disimpan 1 jam)
     admin:     [600, 3600],
+    hot:       [30, 3600],   // baca senarai zon kerap ada polis
     camOk:     [60, 3600],   // baca senarai kamera diterima
     camSug:    [10, 21600],  G_camSug: [100, 21600],   // cadangan kamera laju (seorang maks 10 setiap 6 jam; cache maks 6 jam; yang ditolak pun dikira)
     location:  [400, 3600],  live: [720, 3600],   // aplikasi menyegar setiap 15 s ≈ 240 sejam
@@ -453,6 +456,7 @@ function submitReports(token, r) {
       rows.push(newRow);
       return id;
     });
+    try { items.forEach(it => bumpHotspot_(it.type, lat, lng, userId)); } catch (e) { console.error('bumpHotspot_: ' + e.message); }   // sejarah zon tidak boleh menggagalkan laporan
     bumpStats_(userId, cell_(r.name, 30), items.length - merged, 0, 0);
     if (items.length - merged > 0) bumpDaily_('r', items.length - merged);
     cache.put(cdKey, '1', CONFIG.REPORT_COOLDOWN_SEC);
@@ -1294,6 +1298,7 @@ function cleanup(e) {
       x => new Date(x[2]).getTime() > now - CONFIG.PREFS_RETAIN_DAYS * 864e5);
     // Privasi: rekod perkongsian perjalanan dipadam sehari selepas tamat
     pruneSheet_(sharesSheet_(), SHARE_HEADERS.length, x => new Date(x[8]).getTime() > now - 864e5);
+    pruneSheet_(hotSheet_(), HOT_HEADERS.length, x => new Date(x[5]).getTime() > now - HOT_RETAIN_DAYS * 864e5);
     pruneSheet_(camSugSheet_(), CAMSUG_HEADERS.length, x => new Date(x[6]).getTime() > now - CONFIG.CAM_SUGG_RETAIN_DAYS * 864e5);
     // Statistik tidak aktif setahun dipadam; tanpa ini sheet penuh (MAX_STATS_ROWS) dan pengguna baharu tidak dapat mata.
     // Baris lama tanpa lajur "Aktif" guna tarikh "Sertai".
@@ -1790,6 +1795,57 @@ function nearbyPlaces(token, cat, lat, lng) {
     if (/Terlalu banyak/.test(e.message)) throw e;
     return overpassAlong_(c, [p], 4000);
   }
+}
+
+// ---------------------------------------------------------------- Zon kerap ada polis / kamera (dari sejarah laporan)
+// Laporan POLIS & KAMERA luput selepas sejam atau lebih, tetapi tempat yang berulang kali dilaporkan oleh BERBEZA pengguna
+// ialah zon yang kerap ada sekatan. Disimpan ringkas dalam Sheet ZonRawan; klien memuatnya dan memberi amaran suara.
+// shortcut: laporan dikumpul ikut jarak 250 m dari zon sedia ada (bukan grid), pusat zon tidak dianjak; naik taraf jika zon kelihatan tersasar.
+const SHEET_HOT = 'ZonRawan';
+const HOT_HEADERS = ['Jenis', 'Lat', 'Lng', 'Pelapor', 'Bilangan', 'Terakhir'];   // Pelapor: maks 5 ID pengguna berbeza (tidak dihantar kepada klien)
+const HOT_RADIUS_KM_ = 0.25, HOT_RETAIN_DAYS = 180, HOT_ACTIVE_DAYS_ = 120;
+
+function hotSheet_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  if (!id) throw new Error('Sistem belum disediakan.');
+  const ss = SpreadsheetApp.openById(id);
+  return ss.getSheetByName(SHEET_HOT) || ensureSheet_(ss, SHEET_HOT, HOT_HEADERS);
+}
+
+/** Dipanggil dalam kunci submitReports. */
+function bumpHotspot_(type, lat, lng, userId) {
+  if (type !== 'POLIS' && type !== 'KAMERA') return;
+  const sh = hotSheet_(), last = sh.getLastRow();
+  const rows = last >= 2 ? sh.getRange(2, 1, last - 1, HOT_HEADERS.length).getValues() : [];
+  let best = -1, bestD = Infinity;
+  rows.forEach((x, i) => {
+    if (String(x[0]) !== type) return;
+    const d = distKm_(lat, lng, Number(x[1]), Number(x[2]));
+    if (d <= HOT_RADIUS_KM_ && d < bestD) { best = i; bestD = d; }
+  });
+  if (best >= 0) {
+    const users = String(rows[best][3]).split(',').filter(String);
+    if (users.indexOf(userId) < 0 && users.length < 5) users.push(userId);
+    sh.getRange(best + 2, 4, 1, 3).setValues([[users.join(','), Number(rows[best][4]) + 1, new Date()]]);
+  } else if (rows.length < CONFIG.MAX_HOTSPOTS) {
+    sh.appendRow([type, lat, lng, userId, 1, new Date()]);
+  }
+}
+
+/** [[lat, lng, 'P'|'K'], …] untuk zon yang dilaporkan >= HOTSPOT_MIN_USERS pengguna berbeza dalam 120 hari. Boleh dibaca semua (termasuk tetamu). */
+function getHotspots(token) {
+  const userId = verify_(token);
+  rateLimit_('hot', userId);
+  const cache = CacheService.getScriptCache(), hit = cache.get('hot');
+  if (hit != null) return JSON.parse(hit);
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  const sh = id ? SpreadsheetApp.openById(id).getSheetByName(SHEET_HOT) : null;
+  const last = sh ? sh.getLastRow() : 0, since = Date.now() - HOT_ACTIVE_DAYS_ * 864e5;
+  const list = last < 2 ? [] : sh.getRange(2, 1, last - 1, HOT_HEADERS.length).getValues()
+    .filter(x => String(x[3]).split(',').filter(String).length >= CONFIG.HOTSPOT_MIN_USERS && new Date(x[5]).getTime() > since && isValidCoord_(Number(x[1]), Number(x[2])))
+    .map(x => [Number(Number(x[1]).toFixed(5)), Number(Number(x[2]).toFixed(5)), String(x[0]) === 'POLIS' ? 'P' : 'K']).slice(0, 400);
+  cache.put('hot', JSON.stringify(list), 600);
+  return list;
 }
 
 // ---------------------------------------------------------------- Cadangan kamera laju (pengguna → pemilik)
