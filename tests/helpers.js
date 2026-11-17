@@ -103,7 +103,7 @@ function loadCode(extraGlobals) {
   ctx.realVerify_ = ctx.verify_;
   ctx.verify_ = token => token;           // kebanyakan ujian: token = id pengguna (ujian pindah guna realVerify_)
   // Cipta helaian dengan tajuk sebenar dari Code.gs
-  ['SHEET_REPORTS:REPORT_HEADERS', 'SHEET_STATS:STATS_HEADERS', 'SHEET_PREFS:PREFS_HEADERS', 'SHEET_SHARES:SHARE_HEADERS', 'SHEET_CAMSUG:CAMSUG_HEADERS', 'SHEET_CAMOK:CAMOK_HEADERS',
+  ['SHEET_REPORTS:REPORT_HEADERS', 'SHEET_STATS:STATS_HEADERS', 'SHEET_PREFS:PREFS_HEADERS', 'SHEET_SHARES:SHARE_HEADERS', 'SHEET_CAMSUG:CAMSUG_HEADERS', 'SHEET_CAMOK:CAMOK_HEADERS', 'SHEET_HOT:HOT_HEADERS',
     'SHEET_USERS:USER_HEADERS'].forEach(p => {
     const [n, h] = p.split(':');
     const name = vm.runInContext(n, ctx), headers = vm.runInContext(h, ctx);

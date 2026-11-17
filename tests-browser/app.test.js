@@ -1025,3 +1025,31 @@ for (const file of FILES) test(`${file}: panel pentadbir — butang Terima hanya
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Zon kerap ada polis/kamera: amaran suara sekali, hanya di hadapan, ikut tetapan jenis amaran (saluran uji)
+test('IndexUji.html: zon kerap ada polis — diamaran sekali di hadapan; tidak bila di belakang, perlahan, jenis dimatikan atau laporan semasa sudah ada', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      const me = { lat: 3.1, lng: 101.7, heading: 0, speed: 60 };
+      const shown = () => $('toast').style.display === 'block' && /Kawasan sering ada polis/.test($('toast').textContent);
+      const run = (extra, mut) => {
+        $('toast').style.display = 'none'; state.hotSaid = {}; state.reports = [];
+        state.hot = [Object.assign({ lat: 3.1036, lng: 101.7, type: 'P' }, extra || {})];   // ~400 m utara
+        if (mut) mut(); checkHotspots(Object.assign({}, me, (mut && mut.me) || {}), true); return shown();
+      };
+      const out = {};
+      out.depan = run();
+      checkHotspots(me, true); $('toast').style.display = 'none'; checkHotspots(me, true);
+      out.sekaliSahaja = shown();                                                           // 30 minit: tidak diulang
+      out.belakang = run({ lat: 3.0964 });
+      state.hot = [{ lat: 3.1036, lng: 101.7, type: 'P' }]; state.hotSaid = {}; $('toast').style.display = 'none'; checkHotspots(Object.assign({}, me, { speed: 10 }), true);
+      out.perlahan = shown();
+      const old = S.alertTypes.slice(); S.alertTypes = S.alertTypes.filter(x => x !== 'POLIS'); out.dimatikan = run(); S.alertTypes = old;
+      out.laporanSemasa = run({}, () => { state.reports = [{ type: 'POLIS', lat: 3.1034, lng: 101.7 }]; });
+      return out;
+    });
+    assert.deepStrictEqual(r, { depan: true, sekaliSahaja: false, belakang: false, perlahan: false, dimatikan: false, laporanSemasa: false });
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
