@@ -976,3 +976,28 @@ for (const file of FILES) test(`${file}: semua halaman tetapan guna ikon garisan
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Selepas melepasi kamera yang diamaran: kad "Kamera tadi masih ada?"; "Tiada" dihantar kepada pemilik (saluran uji)
+for (const file of ['IndexUji.html']) test(`${file}: kad "Kamera tadi masih ada?" selepas melepasi kamera; "Tiada" lapor ke server; tidak ditanya lagi dalam 7 hari`, async () => {
+  const { page, errors, close } = await open(file);
+  try {
+    await startNav(page);
+    const r = await page.evaluate(async () => {
+      const w = ms => new Promise(x => setTimeout(x, ms));
+      window.__sent = []; window.__override = { suggestCamera: a => { __sent.push(a[1]); return { ok: true }; } };
+      localStorage.removeItem('jk_camasked'); hideAsk();
+      const add = () => state.camPass = [{ id: 'cam-77', a: 1000, lat: 3.15, lng: 101.7, navId: state.navId }];
+      add(); checkCamGone(1050);                                    // belum 80 m
+      const early = $('askCard').style.display === 'block';
+      checkCamGone(1100);
+      const shown = $('askCard').style.display === 'block' && /Kamera tadi masih ada/.test($('askText').textContent);
+      $('askNo').click(); await w(100);
+      hideAsk(); add(); checkCamGone(1200);                         // tanya lagi dalam 7 hari: tidak
+      return { early, shown, again: $('askCard').style.display === 'block', sent: __sent };
+    });
+    assert.strictEqual(r.early, false); assert.strictEqual(r.shown, true); assert.strictEqual(r.again, false);
+    assert.strictEqual(r.sent.length, 1);
+    assert.strictEqual(r.sent[0].gone, true); assert.strictEqual(r.sent[0].camId, 'cam-77');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

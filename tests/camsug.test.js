@@ -71,3 +71,25 @@ test('had kadar cadangan: mesej khusus (bukan "Terlalu banyak permintaan" umum)'
   for (let i = 0; i < 10; i++) ctx.suggestCamera('g_A', { lat: P.lat + i * 0.01, lng: P.lng });
   assert.throws(() => ctx.suggestCamera('g_A', { lat: P.lat + 0.5, lng: P.lng }), /Terlalu banyak cadangan kamera dihantar/);
 });
+
+test('laporan "kamera tiada": disimpan dengan Jenis tiada, digabung ikut id kamera, tidak bercampur dengan cadangan baharu', () => {
+  const env = loadCode(), { ctx } = env;
+  const G = { lat: P.lat, lng: P.lng, gone: true, camId: 'cam-123' };
+  assert.strictEqual(ctx.suggestCamera('g_A', Object.assign({ name: 'Ali' }, G)).merged, false);
+  assert.throws(() => ctx.suggestCamera('g_A', G), /sudah melaporkan kamera ini/);
+  assert.strictEqual(ctx.suggestCamera('g_B', G).merged, true);                              // orang lain, kamera sama: kira
+  assert.strictEqual(ctx.suggestCamera('g_B', Object.assign({}, G, { camId: 'cam--5' })).merged, false);   // id negatif (kamera pemilik)
+  assert.strictEqual(ctx.suggestCamera('g_C', { lat: P.lat, lng: P.lng }).merged, false);    // cadangan baharu di tempat sama: baris berasingan
+  env.session.email = env.session.owner;
+  const d = ctx.adminOverview('g_X').camSug;
+  assert.strictEqual(d.length, 3);
+  const g = d.find(x => x.note === 'cam-123');
+  assert.strictEqual(g.gone, true); assert.strictEqual(g.count, 2);
+  assert.strictEqual(d.find(x => !x.gone).count, 1);
+});
+
+test('laporan "kamera tiada": id kamera tidak sah ditolak; tetamu ditolak', () => {
+  const { ctx } = loadCode();
+  for (const bad of ['', 'abc', 'cam-', 'cam-12a', '=cmd', 'cam-1234567890123']) assert.throws(() => ctx.suggestCamera('g_A', { lat: P.lat, lng: P.lng, gone: true, camId: bad }), /Kamera tidak sah/, bad);
+  assert.throws(() => ctx.suggestCamera('a_0123456789abcdef0123', { lat: P.lat, lng: P.lng, gone: true, camId: 'cam-1' }), /Log masuk akaun Google/);
+});

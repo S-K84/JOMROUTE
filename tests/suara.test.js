@@ -99,3 +99,9 @@ test('kamera: checkHazards & checkCameras guna nearAlertedCam / noteCamAlert; ro
   assert.match(s2, /cam\.lat != null && nearAlertedCam\(cam\)/);
   assert.match(s2, /id: 'cam-' \+ el\.id, lat: el\.lat, lng: el\.lon/);
 });
+
+test('kamera: checkCameras merekod kamera yang diamaran untuk soalan "masih ada?", dan checkCamGone dipanggil bersama', () => {
+  const s2 = clientScript('IndexUji.html');
+  assert.match(s2, /\(state\.camPass = state\.camPass \|\| \[\]\)\.push\(\{ id: cam\.id, a: cam\.a, lat: cam\.lat, lng: cam\.lng, navId: state\.navId \}\)/);
+  assert.match(s2, /checkCameras\(along\); checkCamGone\(along\);/);
+});
