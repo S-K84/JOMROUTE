@@ -1003,8 +1003,8 @@ for (const file of FILES) test(`${file}: kad "Kamera tadi masih ada?" selepas me
 });
 
 // ---- Panel pentadbir: butang Terima pada cadangan kamera baharu (bukan laporan "tiada") (saluran uji)
-test('IndexUji.html: panel pentadbir — butang Terima hanya pada cadangan baharu; tekan dua kali memanggil adminAcceptCamera', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: panel pentadbir — butang Terima hanya pada cadangan baharu; tekan dua kali memanggil adminAcceptCamera`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.evaluate(() => {
       window.__acc = [];

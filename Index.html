@@ -4218,7 +4218,7 @@ function titikElements(d, boxes) {
     if (bb.some(b => p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3]))
       out.push({ type: 'node', id: p[2], lat: p[0], lon: p[1], tags: { highway } });
   });
-  add(d.c, 'speed_camera'); add(d.s, 'traffic_signals');
+  add(d.c, 'speed_camera'); add(state.camOk || [], 'speed_camera'); add(d.s, 'traffic_signals');   // camOk: kamera yang diterima pemilik (dari server)
   return out;
 }
 // ---- Jalan ber-had laju dari fail statik (docs/data/had/, dikemas kini sebulan sekali oleh .github/workflows/had-bulanan.yml).
@@ -4794,7 +4794,8 @@ function renderAdmin(d) {
   const cams = (d.camSug || []).map(x => `<div class="adm-row"><div class="t">${x.gone ? '🚫 Kamera dilaporkan tiada · ' + esc(x.note) : '📷'} ${Number(x.lat).toFixed(5)}, ${Number(x.lng).toFixed(5)}${Number(x.count) > 1 ? ' · 👥' + Number(x.count) : ''}</div>
       <div class="m">${esc(x.name || 'Tanpa Nama')} · ${ago(x.time)}</div>
       <div class="adm-act"><button data-adm="cview" data-id="${esc(x.id)}">🗺️ Lihat</button>
-        ${x.gone ? '' : `<button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>`}
+        ${x.gone ? '' : `<button data-adm="caccept" data-id="${esc(x.id)}">✅ Terima</button>
+        <button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>`}
         <button class="warn" data-adm="cdone" data-id="${esc(x.id)}">✅ Selesai (buang)</button></div></div>`).join('')
     || '<div class="hint">Tiada cadangan kamera.</div>';
   const banned = (d.banned || []).map(u => `<div class="adm-row"><div class="t">${esc(u)}</div>
@@ -4841,6 +4842,7 @@ $('adminBody').addEventListener('click', async e => {
   try {
     if (act === 'del') { await call('adminDeleteReport', token, id); toast('🗑️ Laporan dipadam.'); }
     else if (act === 'ban') { await call('adminBan', token, id, true); toast('🚫 Pengguna disekat & laporannya dipadam.'); }
+    else if (act === 'caccept') { await call('adminAcceptCamera', token, id); toast('✅ Kamera diterima. Pengguna nampak dalam beberapa minit.'); }
     else if (act === 'cdone') { await call('adminResolveCamera', token, id); toast('Cadangan dibuang.'); }
     else if (act === 'unban') { await call('adminBan', token, id, false); toast('Pengguna dinyahsekat.'); }
     refresh(); loadAdmin();
@@ -5152,8 +5154,16 @@ function offerMigration(oldToken, offer) {
     $('migrateYes').disabled = false;
   };
 }
+/** Kamera yang diterima pemilik (cadangan pengguna): format [lat, lng, id], sama seperti titik.json. Gagal = senyap, guna titik.json sahaja. */
+function loadAcceptedCams() {
+  if (!token || offline) return;
+  call('getAcceptedCameras', token).then(l => {
+    state.camOk = (Array.isArray(l) ? l : []).filter(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]) && p[2] < 0).slice(0, 300);
+  }).catch(() => {});
+}
 call('getSession', prevToken, pendingOld).then(async s => {
   token = s.token; store.set('jk_token', token);
+  loadAcceptedCams();
   state.isOwner = s.owner === true;
   if (TRACK) return startTracking();
   await loadPrefsNow();
