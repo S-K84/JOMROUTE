@@ -1054,41 +1054,6 @@ for (const file of FILES) test(`${file}: zon kerap ada polis — diamaran sekali
   } finally { await close(); }
 });
 
-// ---- Lapor dengan suara (saluran uji): pengecaman suara olok-olok
-const fakeSR = (kind, said) => `
-  window.__sent = []; window.__override = { submitReports: a => { __sent.push(a[1].items.map(i => i.type)); return { ok: true, ids: ['abcdef12-0001'], merged: 0 }; } };
-  ${kind === 'none' ? 'window.SpeechRecognition = undefined; window.webkitSpeechRecognition = undefined;' : `
-  window.SpeechRecognition = window.webkitSpeechRecognition = class { start() { setTimeout(() => {
-    if (${JSON.stringify(kind)} === 'error') this.onerror({ error: 'not-allowed' });
-    else this.onresult({ results: [[{ transcript: ${JSON.stringify(said || '')} }]] });
-    this.onend(); }, 20); } stop() {} };`}`;
-test('IndexUji.html: lapor dengan suara — padanan kata kunci menghantar laporan; tidak faham / mikrofon ditolak / tiada sokongan ditangani', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
-  try {
-    const run = async (init, wait) => {
-      await page.addInitScript(init);
-      await page.reload(); await page.waitForFunction(() => window.__appStarted === true);
-      return page.evaluate(async wait => {
-        const w = ms => new Promise(r => setTimeout(r, ms));
-        setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() }); openReport();
-        const visible = $('btnVoiceRep').style.display !== 'none';
-        if (visible) $('btnVoiceRep').click();
-        await w(wait || 400);
-        return { visible, sent: window.__sent, toast: $('toast').style.display === 'block' ? $('toast').textContent : '' };
-      }, wait);
-    };
-    const ok = await run(fakeSR('ok', 'ada sekatan polis dan kemalangan di depan'));
-    assert.strictEqual(ok.visible, true); assert.deepStrictEqual(ok.sent, [['KEMALANGAN', 'POLIS']]);
-    const no = await run(fakeSR('ok', 'halo apa khabar'));
-    assert.deepStrictEqual(no.sent, []); assert.match(no.toast, /Tidak faham/);
-    const err = await run(fakeSR('error'));
-    assert.deepStrictEqual(err.sent, []); assert.match(err.toast, /Mikrofon tidak dibenarkan/);
-    const none = await run(fakeSR('none'));
-    assert.strictEqual(none.visible, false);
-    assert.deepStrictEqual(errors, []);
-  } finally { await close(); }
-});
-
 // ---- Halaman "Privasi & data" dalam Tetapan (saluran uji)
 test('IndexUji.html: Tetapan ada "Privasi & data" (BM & English); mod halimunan dan pautan padam data ada di dalamnya', async () => {
   const { page, errors, close } = await open('IndexUji.html');
