@@ -62,7 +62,16 @@
       document.getElementById('buka').style.display = 'none';
       document.getElementById('pasang').style.display = 'block';
       document.body.className = 'pasang';
-      document.getElementById('go').textContent = 'Buka tanpa ikon';
+      document.getElementById('go').textContent = EN ? 'Open without the icon' : 'Buka tanpa ikon';
+      if (EN) document.getElementById('pasang').innerHTML =
+        '<p>Community navigation & traffic reports for Malaysia. Free, no download.</p>' +
+        '<div class="ini">👇 Add to the home screen <b>from this page</b>, before opening the app. If added from inside the app, ' +
+        'the icon becomes a plain letter “J” instead of the 🚗 car icon.</div>' +
+        '<ol><li>Tap the <b>Share</b> button ⬆️ (iPhone: in the Chrome address bar / bottom of the Safari screen).</li>' +
+        '<li>Choose <b>Add to Home Screen</b>.</li>' +
+        '<li>Tap <b>Add</b>. The JomRoute icon (car on a road) appears on your home screen.</li>' +
+        '<li>Open JomRoute from that icon.</li></ol>' +
+        '<p>Android: tap <b>⋮</b> → <b>Add to Home screen</b>.</p>';
       history.replaceState(null, '', location.pathname + location.search);
     } else {
       location.replace(APP + location.search);

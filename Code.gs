@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.17-l';
+const APP_VERSION = '2026.11.17-m';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -370,11 +370,27 @@ function rlKey_(name, who) {
 function rateLimitAll_(pairs, count) {
   count = Math.max(1, Math.floor(Number(count) || 1));
   const cache = CacheService.getScriptCache();
-  const rows = pairs.map(p => ({ lim: CONFIG.LIMITS[p[0]], key: rlKey_(p[0], p[1]) }));
+  const rows = pairs.map(p => ({ name: p[0], lim: CONFIG.LIMITS[p[0]], key: rlKey_(p[0], p[1]) }));
   const got = cache.getAll(rows.map(x => x.key));
   rows.forEach(x => { x.n = Number(got[x.key] || 0); });
   if (rows.some(x => x.n + count > x.lim[0])) throw new Error('Terlalu banyak permintaan. Cuba lagi nanti.');
   rows.forEach(x => cache.put(x.key, String(x.n + count), x.lim[1]));
+  rows.forEach(x => quotaAlert_(x.name, x.n + count, x.lim));
+}
+
+// Kuota Google yang berkongsi semua pengguna: e-mel kepada pemilik sekali bagi setiap tetingkap bila mencapai 80%.
+const QUOTA_ALERT_ = { G_maps: 'Google Maps (laluan & alamat)', G_places: 'Google Places (carian tempat)' };
+function quotaAlert_(name, used, lim) {
+  if (!QUOTA_ALERT_[name] || used < lim[0] * 0.8) return;
+  const cache = CacheService.getScriptCache(), flag = 'qa_' + name + '_' + Math.floor(Date.now() / 1000 / lim[1]);
+  if (cache.get(flag)) return;
+  cache.put(flag, '1', Math.min(lim[1], 21600));
+  try {
+    MailApp.sendEmail({ to: Session.getEffectiveUser().getEmail(), subject: 'JomRoute · Kuota ' + QUOTA_ALERT_[name] + ' hampir habis',
+      body: 'Kuota ' + QUOTA_ALERT_[name] + ' sudah ' + Math.round(used / lim[0] * 100) + '% (' + used + ' / ' + lim[0] + ') dalam tetingkap ' + (lim[1] / 3600) + ' jam ini.\n\n' +
+        'Jika habis, pengguna nampak "Terlalu banyak permintaan" sehingga tetingkap seterusnya. Tiada tindakan diperlukan kecuali ia berulang setiap hari.\n' +
+        '(E-mel ini dihantar sekali sahaja bagi setiap tetingkap.)' });
+  } catch (e) { console.error('quotaAlert_: ' + e.message); }
 }
 
 /** Kunci skrip dengan mesej mesra. waitLock() melontar "Lock timeout…" yang disangka klien sebagai tiada liputan. */

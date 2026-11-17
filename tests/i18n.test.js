@@ -41,7 +41,9 @@ test('mesej dinamik & paparan biasa diterjemah', () => {
     '➤ Arah ke Timur Laut': '➤ Heading Northeast',
     'oleh Ali': 'by Ali',
     'oleh Ali · baru sahaja · 👍1 👎0': 'by Ali · just now · 👍1 👎0',
-    'Laporan ini sudah ada. 👍 anda ditambah. Terima kasih!': 'This report already exists. Your 👍 was added. Thank you!'
+    'Laporan ini sudah ada. 👍 anda ditambah. Terima kasih!': 'This report already exists. Your 👍 was added. Thank you!',
+    '19.4 km di hadapan · 260 m dari jalan': '19.4 km ahead · 260 m from the road',
+    '↔️ Seberang lebuh raya · 5.0 km di hadapan · 140 m dari jalan': '↔️ Across the highway · 5.0 km ahead · 140 m from the road'
   };
   Object.keys(cases).forEach(ms => assert.strictEqual(tr(ms), cases[ms]));
 });

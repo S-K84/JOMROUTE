@@ -21,10 +21,10 @@ test('pembuka: lompat ke /exec aplikasi, "#pasang" papar langkah tanpa lompat', 
   const run = (hash) => {
     const els = {}, el = id => (els[id] = els[id] || { style: {}, href: '' }), body = {};
     let replaced = null, rewritten = null;
-    new Function('document', 'location', 'history', js)(
+    new Function('document', 'location', 'history', 'navigator', js)(
       { getElementById: el, body },
       { hash, search: '?x=1', pathname: '/JOMROUTE/', replace: u => { replaced = u; } },
-      { replaceState: (a, b, u) => { rewritten = u; } });
+      { replaceState: (a, b, u) => { rewritten = u; } }, { language: 'ms-MY' });
     return { els, body, replaced, rewritten };
   };
   const a = run('');
@@ -55,8 +55,8 @@ test('pembuka "#pasang": suruh tambah ikon dari halaman INI; butang buka jadi pi
   assert.match(html, /huruf “J”/);
   const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const els = {}, body = {}, el = id => (els[id] = els[id] || { style: {}, href: '' });
-  new Function('document', 'location', 'history', js)({ getElementById: el, body },
-    { hash: '#pasang', search: '', pathname: '/JOMROUTE/', replace: () => {} }, { replaceState: () => {} });
+  new Function('document', 'location', 'history', 'navigator', js)({ getElementById: el, body },
+    { hash: '#pasang', search: '', pathname: '/JOMROUTE/', replace: () => {} }, { replaceState: () => {} }, { language: 'ms-MY' });
   assert.strictEqual(body.className, 'pasang');
   assert.strictEqual(els.go.textContent, 'Buka tanpa ikon');
 });
@@ -104,4 +104,17 @@ test('pembuka: ikon dibenam (data:) supaya tidak jadi tanda "?" bila halaman ter
 
 test('docs/: ada .nojekyll supaya GitHub Pages terus menyiarkan fail statik (tanpa binaan Jekyll)', () => {
   assert.ok(fs.existsSync(path.join(dir, '.nojekyll')));
+});
+
+test('pembuka "#pasang": telefon English → langkah pasang dalam English; telefon Melayu kekal BM', () => {
+  const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const run = lang => {
+    const els = {}, el = id => (els[id] = els[id] || { style: {}, href: '' });
+    new Function('document', 'location', 'history', 'navigator', js)({ getElementById: el, body: {} },
+      { hash: '#pasang', search: '', pathname: '/', replace: () => {} }, { replaceState: () => {} }, { language: lang });
+    return els;
+  };
+  const en = run('en-US'), ms = run('ms-MY');
+  assert.match(en.pasang.innerHTML, /Add to Home Screen/); assert.strictEqual(en.go.textContent, 'Open without the icon');
+  assert.strictEqual(ms.pasang.innerHTML, undefined); assert.strictEqual(ms.go.textContent, 'Buka tanpa ikon');   // BM = HTML asal
 });

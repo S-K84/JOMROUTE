@@ -1503,7 +1503,7 @@ const EN_RULES = [
     Isyak: 'Isha' })[m[1]] + ' prayer time'],
   [/^Tiba (.+)$/, m => 'Arrive ' + tr(m[1])], [/^melalui (.+)$/, m => 'via ' + m[1]], [/^lagi (.+)$/, m => m[1] + ' left'],
   [/^(\d+) j (\d+) min$/, m => m[1] + ' h ' + m[2] + ' min'], [/^(.+) di hadapan$/, m => tr(m[1]) + ' ahead'],
-  [/^(.+) dari jalan$/, m => m[1] + ' from the road'], [/^(\d+) (min|jam|hari|bulan|tahun) lalu$/, m =>
+  [/^(\d[\d.,]* (?:m|km)) dari jalan$/, m => m[1] + ' from the road'], [/^(\d+) (min|jam|hari|bulan|tahun) lalu$/, m =>
     m[1] + ' ' + { min: 'min', jam: 'h', hari: (m[1] === '1' ? 'day' : 'days'), bulan: (m[1] === '1' ? 'month' : 'months'),
       tahun: (m[1] === '1' ? 'year' : 'years') }[m[2]] + ' ago'],
   [/^Sertai (.+)$/, m => 'Joined ' + tr(m[1])], [/^(\d+) s lalu$/, m => m[1] + ' s ago'], [/^Dikemas kini (.+)$/, m => 'Updated ' + tr(m[1])],
