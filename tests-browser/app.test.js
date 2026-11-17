@@ -1027,8 +1027,8 @@ for (const file of FILES) test(`${file}: panel pentadbir — butang Terima hanya
 });
 
 // ---- Zon kerap ada polis/kamera: amaran suara sekali, hanya di hadapan, ikut tetapan jenis amaran (saluran uji)
-test('IndexUji.html: zon kerap ada polis — diamaran sekali di hadapan; tidak bila di belakang, perlahan, jenis dimatikan atau laporan semasa sudah ada', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: zon kerap ada polis — diamaran sekali di hadapan; tidak bila di belakang, perlahan, jenis dimatikan atau laporan semasa sudah ada`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       const me = { lat: 3.1, lng: 101.7, heading: 0, speed: 60 };
