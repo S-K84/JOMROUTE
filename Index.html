@@ -2206,10 +2206,37 @@ const PAGES = {
         ? '⚠️ iPhone: use <b>Chrome</b>. Safari cannot open this app. If an old icon (letter “J” or arrow) is on your home screen, remove it first.'
         : '⚠️ iPhone: guna <b>Chrome</b>. Safari tidak dapat membuka aplikasi ini. Jika ikon lama (huruf “J” atau anak panah) ada di skrin utama, buang dahulu.'}</p>` };
   },
+  // Ringkasan privasi: nilai (3 minit, 15 km, 180 hari…) mesti sama dengan pemalar dalam Code.gs — disemak oleh tests/privasi.test.js.
+  privacy: () => {
+    const en = voiceLang === 'en', t = (ms, e) => en ? e : ms;
+    return { title: 'Privasi & data', html:
+      sec(t('Apa pengguna lain nampak', 'What other users see')) +
+      note(t('Hanya pengguna dalam 15 km: nama samaran, mood, dan kedudukan anda yang <b>dikaburkan ~100 m</b>, kelajuan dibundarkan dan arah kasar. ID anda tidak dihantar. Kedudukan hanya disimpan 3 minit.',
+        'Only users within 15 km: your nickname, mood and a position <b>blurred to ~100 m</b>, rounded speed and rough direction. Your ID is not sent. Your position is kept for only 3 minutes.')) +
+      list([sRow({ toggle: 'hidden', icon: lineIcon('eyeOff'), color: '#607d8b', label: 'Mod halimunan', sub: 'Jangan kongsi lokasi saya' })]) +
+      sec(t('Apa yang disimpan di server', 'What is stored on the server')) +
+      note(t('<b>Laporan</b> (jenis, tempat, nama samaran): sehingga luput. <b>Tempat</b> yang berulang kali dilaporkan polis/kamera diingat 180 hari, tanpa nama. ' +
+        '<b>Mata & statistik</b>: dipadam jika tidak aktif setahun. <b>Tetapan & tempat</b> (jika disegerak): dipadam jika tidak aktif 180 hari. ' +
+        '<b>Kongsi perjalanan</b>: dipadam sehari selepas tamat. <b>Cadangan kamera</b>: sehingga pemilik menyemaknya, maksimum 90 hari. ' +
+        'Pemilik aplikasi boleh melihat data di server. Alamat e-mel anda tidak diterima.',
+        '<b>Reports</b> (type, place, nickname): until they expire. <b>Places</b> often reported as police/camera are remembered for 180 days, without a name. ' +
+        '<b>Points & statistics</b>: deleted after a year of inactivity. <b>Settings & places</b> (if synced): deleted after 180 days of inactivity. ' +
+        '<b>Trip sharing</b>: deleted a day after it ends. <b>Camera suggestions</b>: until the owner reviews them, at most 90 days. ' +
+        'The app owner can see the data on the server. Your email address is not received.')) +
+      sec(t('Pihak ketiga', 'Third parties')) +
+      note(t('<b>Google Maps</b>: titik mula & destinasi untuk laluan, dan kedudukan untuk nama jalan. <b>OpenStreetMap</b>: jubin peta, serta carian tempat dari telefon anda. ' +
+        '<b>Open-Meteo</b>: titik kasar di sepanjang laluan (2 perpuluhan) untuk amaran hujan.',
+        '<b>Google Maps</b>: start & destination for routes, and your position for street names. <b>OpenStreetMap</b>: map tiles, and place search from your phone. ' +
+        '<b>Open-Meteo</b>: rough points along the route (2 decimals) for rain alerts.')) +
+      sec(t('Kawalan anda', 'Your controls')) +
+      list([sRow({ go: 'account', icon: lineIcon('trash'), color: '#e53935', label: 'Padam data saya', sub: 'Lokasi, tetapan, tempat & sejarah carian' }),
+        sRow({ go: 'account', icon: lineIcon('lock'), color: '#546e7a', label: 'Akaun & log masuk' })]) };
+  },
   root: () => ({ title: 'Tetapan', html:
     list([sRow({ go: 'general', icon: lineIcon('gear'), color: '#26c6da', label: 'Umum' }),
       sRow({ go: 'mapd', icon: lineIcon('map'), color: '#43a047', label: 'Paparan peta' }),
-      sRow({ go: 'voice', icon: lineIcon('volume'), color: '#29b6f6', label: 'Suara & bunyi' })]) +
+      sRow({ go: 'voice', icon: lineIcon('volume'), color: '#29b6f6', label: 'Suara & bunyi' }),
+      sRow({ go: 'privacy', icon: lineIcon('shield'), color: '#546e7a', label: 'Privasi & data' })]) +
     sec('Pilihan pemanduan') +
     list([sRow({ go: 'nav', icon: lineIcon('navigation'), color: '#3d7cf5', label: 'Navigasi' }),
       sRow({ go: 'vehicle', icon: lineIcon('car'), color: '#29b6f6', label: 'Butiran kenderaan' }),
