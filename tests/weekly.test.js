@@ -39,7 +39,7 @@ test('weeklyReportNow: e-mel ringkasan kepada pemilik + sandaran helaian data', 
   assert.ok(r.backup && r.backup.url);
   const names = env.bk.sheets.map(s => s.name);
   assert.ok(!names.includes('Sheet1'));
-  assert.strictEqual(names.length, 5);                       // Laporan, Statistik, DataPengguna, Kongsi, KameraDiterima
+  assert.strictEqual(names.length, 6);                       // Laporan, Statistik, DataPengguna, Kongsi, KameraDiterima, KameraSembunyi
   assert.ok(names.every(n => / \d{4}-\d{2}-\d{2}$/.test(n)));
 });
 

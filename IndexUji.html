@@ -1361,6 +1361,8 @@ const EN = {
   'Senarai kamera diterima penuh.': 'The accepted cameras list is full.',
   'Privasi & data': 'Privacy & data', 'Padam data saya': 'Delete my data', 'Lokasi, tetapan, tempat & sejarah carian': 'Location, settings, places & search history',
   '💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.': '💡 Find the place in Google Maps, tap Share → Copy link, then paste it here.',
+  '🗑️ Buang kamera ini': '🗑️ Remove this camera', '🗑️ Kamera dibuang. Pengguna dapat kemas kini dalam beberapa minit.': '🗑️ Camera removed. Users will update within minutes.',
+  'Senarai kamera disembunyikan penuh.': 'The hidden cameras list is full.',
   'Terlalu banyak carian sejak sejam lalu. Cuba lagi dalam beberapa minit.': 'Too many searches in the last hour. Try again in a few minutes.',
   'Anda hampir sampai di destinasi.': 'You are almost at your destination.', 'Batal titik singgah': 'Cancel stop',
   'Tiada dijumpai dalam 60 km di hadapan, di sebelah jalan anda.': 'Nothing found in the next 60 km on your side of the road.',
@@ -4284,7 +4286,8 @@ function titikElements(d, boxes) {
     if (bb.some(b => p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3]))
       out.push({ type: 'node', id: p[2], lat: p[0], lon: p[1], tags: { highway } });
   });
-  add(d.c, 'speed_camera'); add(state.camOk || [], 'speed_camera'); add(d.s, 'traffic_signals');   // camOk: kamera yang diterima pemilik (dari server)
+  const hide = state.camHide || [];
+  add(d.c.filter(p => hide.indexOf(p[2]) < 0), 'speed_camera'); add((state.camOk || []).filter(p => hide.indexOf(p[2]) < 0), 'speed_camera'); add(d.s, 'traffic_signals');   // camOk: kamera yang diterima pemilik (dari server)
   return out;
 }
 // ---- Jalan ber-had laju dari fail statik (docs/data/had/, dikemas kini sebulan sekali oleh .github/workflows/had-bulanan.yml).
@@ -4862,6 +4865,7 @@ function renderAdmin(d) {
       <div class="adm-act"><button data-adm="cview" data-id="${esc(x.id)}">🗺️ Lihat</button>
         ${x.gone ? '' : `<button data-adm="caccept" data-id="${esc(x.id)}">✅ Terima</button>
         <button data-adm="ccopy" data-id="${esc(x.id)}">📋 Salin CSV</button>`}
+        ${x.gone ? `<button class="warn" data-adm="cremove" data-id="${esc(x.id)}">🗑️ Buang kamera ini</button>` : ''}
         <button class="warn" data-adm="cdone" data-id="${esc(x.id)}">✅ Selesai (buang)</button></div></div>`).join('')
     || '<div class="hint">Tiada cadangan kamera.</div>';
   const banned = (d.banned || []).map(u => `<div class="adm-row"><div class="t">${esc(u)}</div>
@@ -4909,6 +4913,7 @@ $('adminBody').addEventListener('click', async e => {
     if (act === 'del') { await call('adminDeleteReport', token, id); toast('🗑️ Laporan dipadam.'); }
     else if (act === 'ban') { await call('adminBan', token, id, true); toast('🚫 Pengguna disekat & laporannya dipadam.'); }
     else if (act === 'caccept') { await call('adminAcceptCamera', token, id); toast('✅ Kamera diterima. Pengguna nampak dalam beberapa minit.'); }
+    else if (act === 'cremove') { await call('adminRemoveCamera', token, id); toast('🗑️ Kamera dibuang. Pengguna dapat kemas kini dalam beberapa minit.'); }
     else if (act === 'cdone') { await call('adminResolveCamera', token, id); toast('Cadangan dibuang.'); }
     else if (act === 'unban') { await call('adminBan', token, id, false); toast('Pengguna dinyahsekat.'); }
     refresh(); loadAdmin();
@@ -5231,6 +5236,7 @@ function loadHotspots() {
 }
 function loadAcceptedCams() {
   if (!token || offline) return;
+  call('getHiddenCameras', token).then(l => { state.camHide = (Array.isArray(l) ? l : []).filter(n => Number.isInteger(n)).slice(0, 500); }).catch(() => {});
   call('getAcceptedCameras', token).then(l => {
     state.camOk = (Array.isArray(l) ? l : []).filter(p => Array.isArray(p) && isFinite(p[0]) && isFinite(p[1]) && p[2] < 0).slice(0, 300);
   }).catch(() => {});

@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.17-m';
+const APP_VERSION = '2026.11.17-n';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -43,6 +43,7 @@ const CONFIG = {
   MAX_BANNED: 500,          // had senarai pengguna disekat
   MAX_HOTSPOTS: 2000,       // had baris zon kerap ada polis/kamera (Sheet ZonRawan)
   HOTSPOT_MIN_USERS: 3,     // zon diamaran kepada pengguna hanya bila dilaporkan oleh sekurang-kurangnya sekian pengguna berbeza
+  MAX_CAM_HIDE: 500,        // had kamera (id OSM / kamera-tambahan.csv) yang disembunyikan pemilik dari amaran
   MAX_CAM_OK: 300,          // had kamera yang diterima pemilik (dibaca semua pengguna; cache < 100 KB)
   MAX_CAM_SUGG: 300,        // had cadangan kamera yang menunggu semakan pemilik
   CAM_SUGG_RETAIN_DAYS: 90, // cadangan kamera yang tidak disemak dipadam selepas tempoh ini
@@ -1374,7 +1375,7 @@ function backupSheets_(now) {
   if (id) { try { bk = SpreadsheetApp.openById(id); } catch (e) { bk = null; } }
   if (!bk) { bk = SpreadsheetApp.create('JalanKita — Sandaran'); props.setProperty('BACKUP_ID', bk.getId()); }
   const tag = dayKey_(now);
-  [SHEET_REPORTS, SHEET_STATS, SHEET_PREFS, SHEET_SHARES, SHEET_CAMOK].forEach(name => {
+  [SHEET_REPORTS, SHEET_STATS, SHEET_PREFS, SHEET_SHARES, SHEET_CAMOK, SHEET_CAMHIDE].forEach(name => {
     const sh = ss.getSheetByName(name);
     if (!sh) return;
     const old = bk.getSheetByName(name + ' ' + tag);
@@ -1949,6 +1950,58 @@ function adminAcceptCamera(token, id) {
     sh.deleteRow(i + 2);
     CacheService.getScriptCache().remove('camok');
     return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Kamera yang dilaporkan "tiada" dan disahkan pemilik: kamera OSM / kamera-tambahan.csv disembunyikan dari amaran (id sahaja; fail
+// titik.json tidak diubah), kamera yang pernah diterima pemilik dibuang dari KameraDiterima.
+const SHEET_CAMHIDE = 'KameraSembunyi';
+const CAMHIDE_HEADERS = ['ID', 'Masa'];
+
+function getHiddenCameras(token) {
+  const userId = verify_(token);
+  rateLimit_('camOk', userId);
+  const cache = CacheService.getScriptCache(), hit = cache.get('camhide');
+  if (hit != null) return JSON.parse(hit);
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  const sh = id ? SpreadsheetApp.openById(id).getSheetByName(SHEET_CAMHIDE) : null;
+  const last = sh ? sh.getLastRow() : 0;
+  const list = last < 2 ? [] : sh.getRange(2, 1, last - 1, 1).getValues().map(x => Number(x[0])).filter(n => Number.isInteger(n)).slice(0, CONFIG.MAX_CAM_HIDE);
+  cache.put('camhide', JSON.stringify(list), 600);
+  return list;
+}
+
+/** Pemilik mengesahkan laporan "kamera tiada" (id baris laporan): buang/sembunyikan kamera itu, dan padam laporan. */
+function adminRemoveCamera(token, id) {
+  requireOwner_(token);
+  id = String(id || '');
+  if (!/^[0-9a-f-]{8,36}$/i.test(id)) throw new Error('Cadangan tidak dijumpai.');
+  const lock = lock_();
+  try {
+    const sh = camSugSheet_(), last = sh.getLastRow();
+    const rows = last < 2 ? [] : sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues();
+    const i = rows.findIndex(x => String(x[0]) === id && String(x[8]) === 'tiada');
+    if (i < 0) throw new Error('Cadangan tidak dijumpai.');
+    const m = String(rows[i][5]).match(/^cam-(-?\d{1,12})$/);
+    if (!m) throw new Error('Cadangan tidak dijumpai.');
+    const n = Number(m[1]), ss = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('SHEET_ID'));
+    const ok = ss.getSheetByName(SHEET_CAMOK), okLast = ok ? ok.getLastRow() : 0;
+    const okIds = okLast < 2 ? [] : ok.getRange(2, 1, okLast - 1, 1).getValues();
+    const j = okIds.findIndex(v => Number(v[0]) === n);
+    if (j >= 0) ok.deleteRow(j + 2);                                   // kamera yang pernah diterima pemilik: buang
+    else {                                                              // kamera OSM / kamera-tambahan.csv: sembunyikan
+      const hide = ss.getSheetByName(SHEET_CAMHIDE) || ensureSheet_(ss, SHEET_CAMHIDE, CAMHIDE_HEADERS);
+      const hLast = hide.getLastRow(), hIds = hLast < 2 ? [] : hide.getRange(2, 1, hLast - 1, 1).getValues();
+      if (hIds.every(v => Number(v[0]) !== n)) {
+        if (hLast - 1 >= CONFIG.MAX_CAM_HIDE) throw new Error('Senarai kamera disembunyikan penuh.');
+        hide.appendRow([n, new Date()]);
+      }
+    }
+    sh.deleteRow(i + 2);
+    CacheService.getScriptCache().remove('camok'); CacheService.getScriptCache().remove('camhide');
+    return { ok: true, hidden: j < 0 };
   } finally {
     lock.releaseLock();
   }
