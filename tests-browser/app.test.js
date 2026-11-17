@@ -1001,3 +1001,27 @@ for (const file of FILES) test(`${file}: kad "Kamera tadi masih ada?" selepas me
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Panel pentadbir: butang Terima pada cadangan kamera baharu (bukan laporan "tiada") (saluran uji)
+test('IndexUji.html: panel pentadbir — butang Terima hanya pada cadangan baharu; tekan dua kali memanggil adminAcceptCamera', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      window.__acc = [];
+      window.__override = {
+        adminOverview: () => ({ activeUsers: 1, usersHour: 1, reports: 0, reportsDay: 0, shares: 0, byType: {}, quota: [], recent: [], banned: [],
+          camSug: [{ id: 'abcdef12-0001', name: 'Ali', lat: 3.1, lng: 101.7, note: '', time: Date.now(), count: 1, gone: false },
+                   { id: 'abcdef12-0002', name: 'Ali', lat: 3.2, lng: 101.7, note: 'cam-5', time: Date.now(), count: 1, gone: true }] }),
+        adminAcceptCamera: a => { __acc.push(a[1]); return { ok: true }; }
+      };
+      state.isOwner = true; openAdmin();
+    });
+    await page.waitForFunction(() => /Cadangan kamera/.test($('adminBody').textContent) && $('adminBody').querySelector('[data-adm="caccept"]'));
+    assert.strictEqual(await page.evaluate(() => $('adminBody').querySelectorAll('[data-adm="caccept"]').length), 1);
+    await page.click('[data-adm="caccept"]');
+    await page.click('[data-adm="caccept"]');   // tekan kedua mengesahkan ("Pasti?")
+    await page.waitForFunction(() => window.__acc.length === 1);
+    assert.strictEqual(await page.evaluate(() => window.__acc[0]), 'abcdef12-0001');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.17-b';
+const APP_VERSION = '2026.11.17-c';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -41,6 +41,7 @@ const CONFIG = {
   MAX_SHARES: 500,          // had baris perkongsian perjalanan
   SHARE_MAX_MIN: 360,       // perkongsian paling lama 6 jam (termasuk "sampai destinasi")
   MAX_BANNED: 500,          // had senarai pengguna disekat
+  MAX_CAM_OK: 300,          // had kamera yang diterima pemilik (dibaca semua pengguna; cache < 100 KB)
   MAX_CAM_SUGG: 300,        // had cadangan kamera yang menunggu semakan pemilik
   CAM_SUGG_RETAIN_DAYS: 90, // cadangan kamera yang tidak disemak dipadam selepas tempoh ini
   REGION: 'my',
@@ -55,6 +56,7 @@ const CONFIG = {
     along:     [60, 3600],   G_overpass: [300, 3600], // OpenStreetMap Overpass — perkhidmatan percuma, guna berhemah
     G_photonAlong: [900, 3600], // Photon untuk "Cari di sepanjang laluan" (berasingan daripada carian tempat; hasil disimpan 1 jam)
     admin:     [600, 3600],
+    camOk:     [60, 3600],   // baca senarai kamera diterima
     camSug:    [10, 21600],  G_camSug: [100, 21600],   // cadangan kamera laju (seorang maks 10 setiap 6 jam; cache maks 6 jam; yang ditolak pun dikira)
     location:  [400, 3600],  live: [720, 3600],   // aplikasi menyegar setiap 15 s ≈ 240 sejam
     profile:   [120, 3600],
@@ -1351,7 +1353,7 @@ function backupSheets_(now) {
   if (id) { try { bk = SpreadsheetApp.openById(id); } catch (e) { bk = null; } }
   if (!bk) { bk = SpreadsheetApp.create('JalanKita — Sandaran'); props.setProperty('BACKUP_ID', bk.getId()); }
   const tag = dayKey_(now);
-  [SHEET_REPORTS, SHEET_STATS, SHEET_PREFS, SHEET_SHARES].forEach(name => {
+  [SHEET_REPORTS, SHEET_STATS, SHEET_PREFS, SHEET_SHARES, SHEET_CAMOK].forEach(name => {
     const sh = ss.getSheetByName(name);
     if (!sh) return;
     const old = bk.getSheetByName(name + ' ' + tag);
@@ -1833,6 +1835,48 @@ function suggestCamera(token, r) {
     if (rows.length >= CONFIG.MAX_CAM_SUGG) throw new Error('Senarai cadangan penuh. Cuba lagi nanti.');
     sh.appendRow([Utilities.getUuid(), userId, name, lat, lng, note, new Date(), 1, gone ? 'tiada' : '']);
     return { ok: true, merged: false };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Kamera yang diterima pemilik daripada cadangan pengguna: dibaca oleh SEMUA pengguna dan digabung dengan kamera dalam titik.json.
+const SHEET_CAMOK = 'KameraDiterima';
+const CAMOK_HEADERS = ['ID', 'Lat', 'Lng', 'Nama', 'Masa'];   // ID negatif besar, cth. -123456789, supaya tidak bertembung dengan kamera OSM atau kamera-tambahan.csv
+
+function getAcceptedCameras(token) {
+  const userId = verify_(token);   // tetamu pun boleh melihat
+  rateLimit_('camOk', userId);
+  const cache = CacheService.getScriptCache(), hit = cache.get('camok');
+  if (hit != null) return JSON.parse(hit);
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  const sh = id ? SpreadsheetApp.openById(id).getSheetByName(SHEET_CAMOK) : null;
+  const last = sh ? sh.getLastRow() : 0;
+  const list = last < 2 ? [] : sh.getRange(2, 1, last - 1, 3).getValues()
+    .map(x => [Number(x[1]), Number(x[2]), Number(x[0])]).filter(x => isValidCoord_(x[0], x[1]) && /^-\d{1,12}$/.test(String(x[2])));
+  cache.put('camok', JSON.stringify(list), 600);
+  return list;
+}
+
+/** Pemilik menerima cadangan kamera: masuk senarai "KameraDiterima" (nampak kepada semua pengguna), cadangan dibuang. */
+function adminAcceptCamera(token, id) {
+  requireOwner_(token);
+  id = String(id || '');
+  if (!/^[0-9a-f-]{8,36}$/i.test(id)) throw new Error('Cadangan tidak dijumpai.');
+  const lock = lock_();
+  try {
+    const sh = camSugSheet_(), last = sh.getLastRow();
+    const rows = last < 2 ? [] : sh.getRange(2, 1, last - 1, CAMSUG_HEADERS.length).getValues();
+    const i = rows.findIndex(x => String(x[0]) === id && String(x[8]) !== 'tiada');
+    if (i < 0) throw new Error('Cadangan tidak dijumpai.');
+    const ssId = PropertiesService.getScriptProperties().getProperty('SHEET_ID'), ss = SpreadsheetApp.openById(ssId);
+    const ok = ss.getSheetByName(SHEET_CAMOK) || ensureSheet_(ss, SHEET_CAMOK, CAMOK_HEADERS);
+    if (ok.getLastRow() - 1 >= CONFIG.MAX_CAM_OK) throw new Error('Senarai kamera diterima penuh.');
+    const camId = -(1000000 + Math.floor(Math.random() * 900000000));
+    ok.appendRow([camId, Number(rows[i][3]), Number(rows[i][4]), cell_(rows[i][5] || rows[i][2], 60), new Date()]);
+    sh.deleteRow(i + 2);
+    CacheService.getScriptCache().remove('camok');
+    return { ok: true };
   } finally {
     lock.releaseLock();
   }

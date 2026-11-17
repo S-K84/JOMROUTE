@@ -105,3 +105,21 @@ test('kamera: checkCameras merekod kamera yang diamaran untuk soalan "masih ada?
   assert.match(s2, /\(state\.camPass = state\.camPass \|\| \[\]\)\.push\(\{ id: cam\.id, a: cam\.a, lat: cam\.lat, lng: cam\.lng, navId: state\.navId \}\)/);
   assert.match(s2, /checkCameras\(along\); checkCamGone\(along\);/);
 });
+
+test('kamera diterima pemilik (state.camOk) digabung dengan titik.json untuk kamera di atas laluan', () => {
+  const s2 = clientScript('IndexUji.html');
+  const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
+  const c = { state: { camOk: [[3.2, 101.7, -1000001], [9, 9, -1000002]] } };
+  vm.runInNewContext('const state = this.state;' + f('titikElements') + ';this.f = titikElements;', c);
+  const out = c.f({ c: [[3.1, 101.7, 11]], s: [] }, ['3,101,3.5,102']);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(out.map(e => e.id))), [11, -1000001]);   // kamera di luar kotak dibuang
+  assert.ok(out.every(e => e.tags.highway === 'speed_camera'));
+  assert.deepStrictEqual(c.f({ c: [], s: [] }, ['3,101,3.5,102']).length, 1);
+});
+
+test('kamera diterima: loadAcceptedCams dipanggil sebaik token ada dan hanya menerima id negatif', () => {
+  const s2 = clientScript('IndexUji.html');
+  assert.match(s2, /token = s\.token; store\.set\('jk_token', token\);\n  loadAcceptedCams\(\);/);
+  assert.match(s2, /call\('getAcceptedCameras', token\)/);
+  assert.match(s2, /p\[2\] < 0\)\.slice\(0, 300\)/);
+});

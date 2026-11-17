@@ -27,8 +27,8 @@ test(`${file}: titik dibaca dari fail statik dahulu, Overpass sandaran; mesej di
 
 test(`${file}: titikElements memberi hanya titik dalam kotak, berbentuk Overpass`, () => {
   const s = clientScript(file);
-  const ctx = {};
-  vm.runInNewContext(fn(s, 'titikElements') + ';this.f = titikElements;', ctx);
+  const ctx = { state: {} };
+  vm.runInNewContext('const state = this.state;' + fn(s, 'titikElements') + ';this.f = titikElements;', ctx);
   const d = { c: [[3.1, 101.7, 11], [4.0, 102.0, 12]], s: [[3.1005, 101.7005, 21], [9, 9, 22]] };
   const out = ctx.f(d, ['3.099,101.699,3.102,101.702']);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(out.map(e => [e.id, e.tags.highway]))),
