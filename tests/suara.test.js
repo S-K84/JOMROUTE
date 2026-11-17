@@ -123,3 +123,25 @@ test('kamera diterima: loadAcceptedCams dipanggil sebaik token ada dan hanya men
   assert.match(s2, /call\('getAcceptedCameras', token\)/);
   assert.match(s2, /p\[2\] < 0\)\.slice\(0, 300\)/);
 });
+
+test('laporan suara: kata kunci BM & English → jenis laporan (maks 3; tidak dikenali → kosong)', () => {
+  const s2 = clientScript('IndexUji.html');
+  const m = s2.match(/const VOICE_REPORT_KEYS = \[[\s\S]*?\];\n\/\*\* Teks yang disebut[\s\S]*?\n\}/)[0];
+  const c = { TYPES: { KEMALANGAN: 1, KAMERA: 1, POLIS: 1, BANJIR: 1, LUBANG: 1, KERJA_JALAN: 1, KENDERAAN_ROSAK: 1, SESAK: 1, BAHAYA: 1 } };
+  vm.runInNewContext(m + ';this.f = voiceReportTypes;', c);
+  const t = x => JSON.parse(JSON.stringify(c.f(x)));
+  assert.deepStrictEqual(t('ada polis di depan'), ['POLIS']);
+  assert.deepStrictEqual(t('Kemalangan teruk'), ['KEMALANGAN']);
+  assert.deepStrictEqual(t('ada sekatan polis dan kemalangan'), ['KEMALANGAN', 'POLIS']);
+  assert.deepStrictEqual(t('traffic jam ahead'), ['SESAK']);
+  assert.deepStrictEqual(t('speed camera'), ['KAMERA']);
+  assert.deepStrictEqual(t('banjir kilat'), ['BANJIR']);
+  assert.deepStrictEqual(t('pothole on the road'), ['LUBANG']);
+  assert.deepStrictEqual(t('kereta rosak tepi jalan'), ['KENDERAAN_ROSAK']);
+  assert.deepStrictEqual(t('kerja jalan lorong kiri'), ['KERJA_JALAN']);
+  assert.deepStrictEqual(t('kemalangan polis banjir sesak bahaya'), ['KEMALANGAN', 'POLIS', 'BANJIR']);   // maks 3
+  assert.deepStrictEqual(t('halo apa khabar'), []);
+  assert.deepStrictEqual(t(''), []);
+  assert.deepStrictEqual(t(null), []);
+  assert.deepStrictEqual(t('jalan sempit'), []);                     // "jam" di dalam perkataan lain tidak dipadankan
+});

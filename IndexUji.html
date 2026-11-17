@@ -781,6 +781,7 @@
         <h3>Laporkan</h3>
         <!-- Lapor pantas: satu tekan terus dihantar (selamat semasa memandu) -->
         <p class="pop-muted" style="margin:0 0 6px">Lapor pantas: satu tekan terus dihantar</p>
+        <button class="btn btn-soft" id="btnVoiceRep" style="width:100%; margin:0 0 8px; display:none">🎤 Lapor dengan suara</button>
         <div class="quick-rep" id="quickRep"></div>
         <p class="pop-muted" style="margin:6px 0 8px">Atau pilih jenis & butiran (boleh lebih daripada satu, maks 5)</p>
         <div class="rgrid" id="typeGrid"></div>
@@ -1359,6 +1360,10 @@ const EN = {
   'Kamera dilaporkan tiada': 'Camera reported gone',
   '✅ Terima': '✅ Accept', '✅ Kamera diterima. Pengguna nampak dalam beberapa minit.': '✅ Camera accepted. Users will see it within minutes.',
   'Senarai kamera diterima penuh.': 'The accepted cameras list is full.',
+  'Lapor dengan suara': 'Report by voice', '🎤 Lapor dengan suara': '🎤 Report by voice', '🎙️ Mendengar… sebut jenis laporan': '🎙️ Listening… say the report type',
+  'Tidak faham. Sebut: polis, kemalangan, sesak, banjir, kamera.': 'Did not understand. Say: police, accident, traffic jam, flood, camera.',
+  'Mikrofon tidak dibenarkan atau tidak disokong di sini.': 'The microphone is not allowed or not supported here.', 'Tiada suara didengar.': 'No speech heard.',
+  'Peranti ini tidak menyokong laporan suara.': 'This device does not support voice reports.',
   'Terlalu banyak carian sejak sejam lalu. Cuba lagi dalam beberapa minit.': 'Too many searches in the last hour. Try again in a few minutes.',
   'Anda hampir sampai di destinasi.': 'You are almost at your destination.', 'Batal titik singgah': 'Cancel stop',
   'Tiada dijumpai dalam 60 km di hadapan, di sebelah jalan anda.': 'Nothing found in the next 60 km on your side of the road.',
@@ -4905,6 +4910,48 @@ $('quickRep').addEventListener('click', e => {
     })
     .finally(() => $('quickRep').querySelectorAll('button').forEach(x => { x.disabled = false; }));
 });
+// ---- Lapor dengan suara: sebut jenis laporan (BM / English); padanan kata kunci ringkas, tiada AI. Butang hanya ada jika pelayar menyokong pengecaman suara.
+const VOICE_REPORT_KEYS = [
+  ['KEMALANGAN', /kemalangan|accident|crash|langgar|rempuh/], ['KAMERA', /kamera|camera|\baes\b|\bawas\b|speed ?trap/],
+  ['POLIS', /polis|police|sekatan|road ?block|\bcop\b|operasi/], ['BANJIR', /banjir|flood/], ['LUBANG', /lubang|pothole/],
+  ['KERJA_JALAN', /kerja jalan|baiki jalan|pembinaan|road ?works?|construction/], ['KENDERAAN_ROSAK', /rosak|breakdown|broke|stalled/],
+  ['SESAK', /sesak|kesesakan|\bjam\b|\bjem\b|traffic|perlahan/], ['BAHAYA', /bahaya|hazard|halangan|danger|licin/]];
+/** Teks yang disebut → senarai jenis laporan (maks 3, hanya jenis yang wujud). */
+function voiceReportTypes(text) {
+  const t = String(text || '').toLowerCase();
+  return VOICE_REPORT_KEYS.filter(k => k[1].test(t) && TYPES[k[0]]).map(k => k[0]).slice(0, 3);
+}
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRec) $('btnVoiceRep').style.display = 'block';
+let voiceRec = null;
+$('btnVoiceRep').onclick = () => {
+  if (!state.me) { toast('Tetapkan lokasi anda dahulu.'); return; }
+  if (!SpeechRec) { toast('Peranti ini tidak menyokong laporan suara.'); return; }
+  if (voiceRec) { try { voiceRec.stop(); } catch (e) {} return; }
+  const b = $('btnVoiceRep'), rec = voiceRec = new SpeechRec();
+  rec.lang = voiceLang === 'en' ? 'en-US' : 'ms-MY'; rec.interimResults = false; rec.maxAlternatives = 3; rec.continuous = false;
+  const done = () => { voiceRec = null; b.textContent = '🎤 Lapor dengan suara'; b.disabled = false; };
+  rec.onresult = ev => {
+    const alts = Array.from((ev.results[0] || [])).map(a => a.transcript);
+    const types = voiceReportTypes(alts.join(' '));
+    if (!types.length) { toast('Tidak faham. Sebut: polis, kemalangan, sesak, banjir, kamera.'); return; }
+    const hd = reportHeading(false);
+    sendReport(types.map(k => ({ type: k, desc: '', heading: hd }))).then(res => {
+      const id = res && !Number(res.merged) && res.ids && res.ids[0];
+      if (!id || askBusy()) return;
+      showAsk({ icon: TYPES[types[0]].icon, text: 'Laporan dihantar', sub: types.map(k => TYPES[k].label).join(', '), yes: 'Batal', no: 'OK', ms: 6000,
+        onYes: () => Promise.all(res.ids.map(i => call('deleteMyReport', token, i))).then(() => { toast('Laporan dibatalkan.'); refresh(); },
+          e => toast(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || e))) });
+    });
+  };
+  rec.onerror = ev => {
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') toast('Mikrofon tidak dibenarkan atau tidak disokong di sini.');
+    else if (ev.error === 'no-speech') toast('Tiada suara didengar.');
+  };
+  rec.onend = done;
+  b.textContent = '🎙️ Mendengar… sebut jenis laporan';
+  try { rec.start(); } catch (e) { done(); toast('Mikrofon tidak dibenarkan atau tidak disokong di sini.'); }
+};
 // Cadang kamera laju di lokasi semasa: masuk senarai semakan pemilik (bukan terus di peta)
 $('btnSuggestCam').onclick = async () => {
   if (!state.me) { toast('Tetapkan lokasi anda dahulu.'); return; }
