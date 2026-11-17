@@ -867,9 +867,9 @@ for (const file of FILES) test(`${file}: storan kosong — skrin ditutup sehingg
 });
 
 // ---- Storan kosong + server lambat (> 4 s): teka bahasa dari telefon, jangan tunjuk BM kepada pengguna English
-test('IndexUji.html: storan kosong, server lambat — telefon English kekal English; telefon BM kekal BM', async () => {
+for (const file of FILES) test(`${file}: storan kosong, server lambat — telefon English kekal English; telefon BM kekal BM`, async () => {
   for (const [lang, want] of [['en-US', 'Allow location'], ['ms-MY', 'Benarkan lokasi']]) {
-    const { page, errors, close } = await open('IndexUji.html');
+    const { page, errors, close } = await open(file);
     try {
       await page.addInitScript(`localStorage.clear(); Object.defineProperty(navigator, "language", { get: () => "${lang}" }); window.__override = { loadPrefs: () => new Promise(() => {}) };`);
       await page.reload();
