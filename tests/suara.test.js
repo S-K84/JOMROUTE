@@ -140,8 +140,8 @@ for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: carian nama: 
   assert.strictEqual(c.f('ab', [guess('Jalan Pupuk', 'Kemaman')]), true);                                   // perkataan < 3 huruf diabaikan
 });
 
-test('kamera disembunyikan pemilik (state.camHide) tidak lagi menjadi elemen amaran; kamera lain kekal', () => {
-  const s2 = clientScript('IndexUji.html');
+for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: kamera disembunyikan pemilik (state.camHide) tidak lagi menjadi elemen amaran; kamera lain kekal`, () => {
+  const s2 = clientScript(file);
   const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
   const c = { state: { camHide: [11, -1000001], camOk: [[3.2, 101.7, -1000001], [3.21, 101.7, -1000002]] } };
   vm.runInNewContext('const state = this.state;' + f('titikElements') + ';this.f = titikElements;', c);

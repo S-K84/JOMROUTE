@@ -1095,8 +1095,8 @@ for (const file of FILES) test(`${file}: carian nama yang hanya memberi tekaan j
 });
 
 // ---- Panel pentadbir: "Buang kamera ini" hanya pada laporan kamera tiada (saluran uji)
-test('IndexUji.html: panel pentadbir — Buang kamera ini hanya pada laporan "tiada"; tekan dua kali memanggil adminRemoveCamera', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: panel pentadbir — Buang kamera ini hanya pada laporan "tiada"; tekan dua kali memanggil adminRemoveCamera`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.evaluate(() => {
       window.__rm = [];
