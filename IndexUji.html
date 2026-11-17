@@ -5172,7 +5172,7 @@ function applyPrefs(p) {
 
 // ------------------------------------------------------------ Mula
 // Storan telefon kosong (iPhone kadang-kadang membuangnya) → bahasa belum diketahui sehingga tetapan dari server dimuat.
-// Tutup skrin sebentar (maks 4 s) supaya pengguna English tidak nampak BM dahulu.
+// Tutup skrin sebentar (maks 10 s; rakaman pemilik: server ambil ~6 s) supaya pengguna English tidak nampak BM dahulu.
 function endLangWait() {
   clearTimeout(window.__langWaitT);
   const d = document.getElementById('langWait'); if (d) d.remove();
@@ -5183,7 +5183,7 @@ if (store.get('jk_voice') == null) {
   d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0f1422;color:#f2f3f5;display:flex;align-items:center;' +
     'justify-content:center;font:800 clamp(36px,12vw,56px) system-ui,-apple-system,sans-serif';
   document.body.appendChild(d);
-  window.__langWaitT = setTimeout(endLangWait, 4000);
+  window.__langWaitT = setTimeout(endLangWait, 10000);
 }
 setUiLang(voiceLang);
 setSound(soundOn);
