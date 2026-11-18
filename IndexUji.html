@@ -1987,6 +1987,12 @@ function onlyGuess(q, res) {
   const hay = res.map(p => (p.title + ' ' + p.sub).toLowerCase()).join(' ');
   return !words.some(w => hay.includes(w));
 }
+/** Tiada hasil yang mengandungi SEMUA perkataan carian (>= 3 huruf) → tempat sebenar mungkin tiada; paparkan petua pautan Google Maps. */
+function noFullMatch(q, res) {
+  const words = String(q).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+  return words.length > 0 && !res.some(p => words.every(w => (p.title + ' ' + p.sub).toLowerCase().includes(w)));
+}
+const MAPS_TIP = '<div class="hint" style="padding:8px 4px; text-align:left; font-size:14px">💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.</div>';
 async function doSearch() {
   const q = $('q').value.trim(); if (!q) { renderSuggestions(); return; }
   const box = $('searchBody'), req = state.searchReq = (state.searchReq || 0) + 1;
@@ -2013,9 +2019,8 @@ async function doSearch() {
     const rows = res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '')).join('');
     box.innerHTML = res.length
       ? (onlyGuess(q, res)
-        ? `<div class="hint" style="padding:12px 4px 4px; text-align:left">Tempat "${esc(q)}" tidak dijumpai. Ini hanya jalan yang paling hampir (anggaran).</div>${rows}` +
-          '<div class="hint" style="padding:8px 4px; text-align:left; font-size:14px">💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.</div>'
-        : rows)
+        ? `<div class="hint" style="padding:12px 4px 4px; text-align:left">Tempat "${esc(q)}" tidak dijumpai. Ini hanya jalan yang paling hampir (anggaran).</div>${rows}` + MAPS_TIP
+        : rows + (noFullMatch(q, res) ? MAPS_TIP : ''))
       : '<div class="hint">Tiada hasil. Cuba tambah nama kawasan, cth. "P&C Kitchen Bandar Serenia".</div>';
   } catch (e) { if (!stale()) box.innerHTML = '<div class="hint">' + esc(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || e)) + '</div>'; }
 }

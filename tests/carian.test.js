@@ -27,3 +27,16 @@ test('Photon sudah ada hasil yang meliputi semua perkataan → Google tidak dita
   assert.strictEqual(calls.n, 0);
   assert.ok(r.some(p => p.title === 'Klinik Kesihatan Beserah'));
 });
+
+test('klien: petua pautan Google Maps juga bila hasil ada tetapi tiada yang mengandungi semua perkataan carian (saluran uji)', () => {
+  const vm = require('node:vm'), { clientScript } = require('./helpers');
+  const src = clientScript('IndexUji.html');
+  const c = {};
+  vm.runInNewContext(src.match(/function noFullMatch\([^)]*\) \{[\s\S]*?\n\}/)[0] + ';this.f = noFullMatch;', c);
+  const R = (title, sub) => ({ title, sub: sub || '' });
+  assert.strictEqual(c.f('agensi penguatkuasaan maritim negeri terengganu', [R('Agensi Penguatkuasaan Maritim', 'Kemaman, Terengganu')]), true);
+  assert.strictEqual(c.f('klinik kesihatan beserah', [R('Klinik Kesihatan Beserah', 'Kuantan')]), false);
+  assert.strictEqual(c.f('klinik kesihatan beserah', [R('Klinik Kesihatan Balok'), R('Klinik Kesihatan Beserah')]), false);
+  assert.strictEqual(c.f('a b', [R('X')]), false);   // tiada perkataan >= 3 huruf → tiada petua
+  assert.match(src, /rows \+ \(noFullMatch\(q, res\) \? MAPS_TIP : ''\)/);
+});
