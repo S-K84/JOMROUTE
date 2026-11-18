@@ -1992,6 +1992,14 @@ function noFullMatch(q, res) {
   const words = String(q).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3);
   return words.length > 0 && !res.some(p => words.every(w => (p.title + ' ' + p.sub).toLowerCase().includes(w)));
 }
+/** Susun hasil carian: yang sepadan semua perkataan dahulu, tekaan jalan ("Anggaran") terakhir; dalam kumpulan sama, yang paling dekat dahulu. */
+function rankPlaces(q, res, me) {
+  if (!me) return res;
+  const words = String(q).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+  const key = p => [p.src === 'alamat' && /^Anggaran · /.test(p.sub || '') ? 1 : 0,
+    words.every(w => (p.title + ' ' + p.sub).toLowerCase().includes(w)) ? 0 : 1, dist(me, p)];
+  return res.map((p, i) => ({ p, i, k: key(p) })).sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.k[2] - b.k[2] || a.i - b.i).map(x => x.p);
+}
 const MAPS_TIP = '<div class="hint" style="padding:8px 4px; text-align:left; font-size:14px">💡 Cari tempat itu di Google Maps, tekan Kongsi → Salin pautan, kemudian tampal di sini.</div>';
 async function doSearch() {
   const q = $('q').value.trim(); if (!q) { renderSuggestions(); return; }
@@ -2014,7 +2022,7 @@ async function doSearch() {
   box.innerHTML = '<div class="hint">Mencari…</div>';
   try {
     const me = state.me;
-    const res = await call('searchPlaces', token, q, me ? me.lat : null, me ? me.lng : null);
+    const res = rankPlaces(q, await call('searchPlaces', token, q, me ? me.lat : null, me ? me.lng : null), me);
     if (stale()) return;
     const rows = res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '')).join('');
     box.innerHTML = res.length
