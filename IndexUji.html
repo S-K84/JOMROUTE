@@ -4429,7 +4429,7 @@ const LM_CATS = ['fuel', 'mosque'], LM_M = 40;
 function landmarkFor(pt, pois) {
   let best = '', bd = LM_M;
   pois.forEach(p => {
-    const d = p.title && p.title.length <= 40 ? dist(pt, p) : Infinity;
+    const d = p.title && p.title.length <= 40 && !/^(Masjid \/ surau|Stesen minyak)$/.test(p.title) ? dist(pt, p) : Infinity;   // nama am = tiada nama dalam OSM
     if (d < bd) { bd = d; best = p.title; }
   });
   return best;
