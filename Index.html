@@ -209,8 +209,9 @@
     button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible {
       outline:3px solid var(--accent-text); outline-offset:2px; }
     #speedo small { font-size:11px; color:var(--muted); margin-top:2px; }
-    #street { align-self:center; max-width:52%; padding:10px 18px; border-radius:999px; background:var(--pill); color:var(--pill-fg);
-      font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:var(--shadow); }
+    #street { align-self:center; max-width:52%; padding:8px 16px; border-radius:22px; background:var(--pill); color:var(--pill-fg);
+      font-weight:700; font-size:15px; line-height:1.2; text-align:center; overflow-wrap:anywhere; overflow:hidden; box-shadow:var(--shadow);
+      display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }   /* nama jalan panjang: sehingga 2 baris, bukan dipotong "…" */
     #street:empty { visibility:hidden; }
     #btnReport { width:72px; height:72px; border-radius:20px; background:var(--report-bg); color:var(--report-fg);
       display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); }
