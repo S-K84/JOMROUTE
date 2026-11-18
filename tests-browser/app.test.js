@@ -1195,3 +1195,19 @@ test('IndexUji.html: noteSkrin mencatat bila halaman lebih lebar daripada skrin,
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Nama jalan panjang di pil bawah peta muat dalam 2 baris (tidak dipotong "…") (saluran uji)
+test('IndexUji.html: nama jalan panjang dibungkus dua baris dalam pil, tidak terpotong', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const r = await page.evaluate(() => {
+      const el = $('street'); setStreet('Lorong Sungai Karang Damai 15');
+      const cs = getComputedStyle(el), lh = parseFloat(cs.lineHeight);
+      return { nowrap: cs.whiteSpace === 'nowrap', lines: Math.round(el.getBoundingClientRect().height / lh), clipped: el.scrollHeight > el.clientHeight + 1 };
+    });
+    assert.strictEqual(r.nowrap, false);
+    assert.strictEqual(r.clipped, false, JSON.stringify(r));
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
