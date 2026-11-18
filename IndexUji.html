@@ -2485,8 +2485,24 @@ function renderDrawer() {
       / \(uji\)$/.test(APP_VERSION)
         ? sRow({ doAct: 'ujiOff', icon: lineIcon('back'), color: '#607d8b', label: 'Kembali ke versi biasa' })
         : sRow({ doAct: 'ujiOn', icon: lineIcon('flask'), color: '#7b1fa2', label: 'Buka versi uji', sub: 'Pemilik sahaja · ciri baharu sebelum dilancar' })]) : ''}
-    <p class="pop-muted" style="margin:16px 4px">JomRoute · Peta © OpenStreetMap · Laluan oleh Google<br>Versi ${APP_VERSION}${state.isOwner ? '<br><span id="titikInfo"></span><br><span id="hadInfo"></span><br><span id="poiInfo"></span>' : ''}</p>`;
+    <p class="pop-muted" style="margin:16px 4px">JomRoute · Peta © OpenStreetMap · Laluan oleh Google<br>Versi ${APP_VERSION}${state.isOwner ? '<br><span id="titikInfo"></span><br><span id="hadInfo"></span><br><span id="poiInfo"></span>' : ''}${state.isOwner && / \(uji\)$/.test(APP_VERSION) ? '<br><span id="skrinInfo"></span>' : ''}</p>`;
   if (state.isOwner) showTitikInfo();
+  showSkrinInfo();
+}
+/** Saluran uji, pemilik sahaja: ukuran skrin untuk menyiasat halaman terpotong di kanan (Android). */
+function showSkrinInfo() {
+  const e = $('skrinInfo');
+  if (!e) return;
+  const vv = window.visualViewport;
+  const de = document.documentElement;
+  let lebar = '';
+  try {
+    const w = [...document.body.querySelectorAll('*')].filter(x => x.getBoundingClientRect().right > window.innerWidth + 1)
+      .slice(0, 3).map(x => (x.id ? '#' + x.id : '') + '.' + String(x.className).split(' ')[0] + ' ' + Math.round(x.getBoundingClientRect().right));
+    lebar = w.length ? ' · lebih: ' + w.join(', ') : ' · tiada elemen melebihi skrin';
+  } catch (_) { /* abaikan */ }
+  e.textContent = 'Skrin: lebar ' + window.innerWidth + ', halaman ' + de.scrollWidth + ', skala ' + (vv ? vv.scale.toFixed(2) : '?') +
+    ', dpr ' + window.devicePixelRatio + ', fizikal ' + screen.width + lebar;
 }
 /** Pemilik sahaja: tarikh & bilangan data titik (fail bulanan) di bawah versi dalam menu, untuk nampak jika tugas bulanan berhenti. */
 function showTitikInfo() {
