@@ -894,6 +894,24 @@ for (const file of FILES) test(`${file}: storan kosong, server jawab selepas 6 s
   } finally { await close(); }
 });
 
+// ---- Saiz teks Besar: kekal selepas storan dibuang (dari server) dan laci menu tidak menutup seluruh skrin
+test('IndexUji.html: saiz teks Besar dari server dipakai bila storan kosong; laci ☰ meninggalkan ruang peta untuk ditutup', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => ({ t: 1, name: "Ali", voice: "en", settings: { textSize: "large" } }) };');
+    await page.reload();
+    await page.waitForFunction(() => window.__appStarted === true);
+    await page.waitForFunction(() => document.body.classList.contains('big-text'), null, { timeout: 4000 });
+    const gap = await page.evaluate(() => {
+      openDrawer();
+      const r = document.getElementById('drawerPane').getBoundingClientRect();
+      return window.innerWidth - r.right;
+    });
+    assert.ok(gap > 20, 'laci menutup seluruh skrin, baki ' + gap);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
+
 // ---- Mesej WhatsApp mengikut bahasa tetapan (saluran uji)
 for (const file of FILES) test(`${file}: mesej WhatsApp ikut bahasa tetapan (English / BM)`, async () => {
   const { page, errors, close } = await open(file);

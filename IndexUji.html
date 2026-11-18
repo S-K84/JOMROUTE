@@ -393,6 +393,8 @@
     /* Tulisan besar: panel, banner & menu dibesarkan (peta tidak — zoom pada peta mengganggu koordinat Leaflet) */
     body.big-text #navTop, body.big-text #panel, body.big-text #home, body.big-text #setSheet, body.big-text #drawer .pane,
     body.big-text #askCard, body.big-text #toast, body.big-text .modal .sheet { zoom:1.18; }
+    /* zoom 1.18 membesarkan lebar laci juga; bahagi supaya ruang peta di kanan kekal boleh disentuh untuk menutup */
+    body.big-text #drawer .pane { width:min(72vw, 305px); }
     .qr-box { background:#fff; border-radius:18px; padding:14px; width:240px; box-sizing:content-box; margin:6px auto 14px; color:#000;
       text-align:center; }
     .qr-box img { display:block; width:100%; height:auto; aspect-ratio:1; }
@@ -5164,7 +5166,7 @@ function applyPrefs(p) {
     state.headingUp = p.headup !== false; store.set('jk_headup', state.headingUp ? '1' : '0');
     if (!state.headingUp && canRotate) map.setBearing(0);
     store.set('jk_prefs_t', String(p.t));
-    applyTheme(); ['showSpeedo', 'showUsers', 'carIcon', 'units', 'repTypes'].forEach(applySetting);
+    applyTheme(); ['showSpeedo', 'showUsers', 'carIcon', 'units', 'repTypes', 'textSize'].forEach(applySetting);
     renderHome();
   } finally { applyingPrefs = false; }
   return true;
