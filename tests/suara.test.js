@@ -159,6 +159,9 @@ test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 
   assert.strictEqual(c.f(pt, [{ title: 'Petronas', lat: 3.1001, lng: 101.7 }, { title: 'Jauh', lat: 3.11, lng: 101.7 }]), 'Petronas');
   assert.strictEqual(c.f(pt, [{ title: 'Jauh', lat: 3.11, lng: 101.7 }]), '');
   assert.strictEqual(c.f(pt, [{ title: 'X'.repeat(41), lat: 3.1, lng: 101.7 }]), '');
+  // Nama am (tiada nama dalam OSM) tidak disebut; yang bernama dipilih walaupun lebih jauh sedikit
+  assert.strictEqual(c.f(pt, [{ title: 'Masjid / surau', lat: 3.1, lng: 101.7 }, { title: 'Stesen minyak', lat: 3.1, lng: 101.7 }]), '');
+  assert.strictEqual(c.f(pt, [{ title: 'Masjid / surau', lat: 3.1, lng: 101.7 }, { title: 'Shell', lat: 3.1002, lng: 101.7 }]), 'Shell');
   for (const file of files) {
     const t = clientScript(file);
     assert.match(t, /next\.text \+ \(next\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turnEarly'/, file);
