@@ -1162,3 +1162,16 @@ for (const file of FILES) test(`${file}: panel pentadbir — Buang kamera ini ha
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Menu ☰ (saluran uji, pemilik): baris "Skrin: lebar …" untuk siasat halaman terpotong di Android; tiada di app biasa
+test('IndexUji.html: menu ☰ pemilik ada ukuran skrin; app biasa tiada', async () => {
+  for (const [file, ada] of [['IndexUji.html', true], ['Index.html', false]]) {
+    const { page, errors, close } = await open(file);
+    try {
+      const t = await page.evaluate(() => { state.isOwner = true; renderDrawer(); const e = $('skrinInfo'); return e ? e.textContent : null; });
+      if (ada) assert.match(t, /^Skrin: lebar \d+, halaman \d+, skala [\d.]+, dpr [\d.]+, fizikal \d+/, String(t));
+      else assert.strictEqual(t, null);
+      assert.deepStrictEqual(errors, []);
+    } finally { await close(); }
+  }
+});
