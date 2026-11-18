@@ -154,7 +154,7 @@ test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 
   const s2 = clientScript('IndexUji.html');
   const f = name => s2.match(new RegExp('function ' + name + '\\([^)]*\\) \\{[\\s\\S]*?\\n\\}'))[0];
   const c = {};
-  vm.runInNewContext('const LM_M = 40;' + f('dist') + f('landmarkFor') + ';this.f = landmarkFor;', c);
+  vm.runInNewContext('const LM_M = 60;' + f('dist') + f('landmarkFor') + ';this.f = landmarkFor;', c);
   const pt = { lat: 3.1, lng: 101.7 };
   assert.strictEqual(c.f(pt, [{ title: 'Petronas', lat: 3.1001, lng: 101.7 }, { title: 'Jauh', lat: 3.11, lng: 101.7 }]), 'Petronas');
   assert.strictEqual(c.f(pt, [{ title: 'Jauh', lat: 3.11, lng: 101.7 }]), '');
@@ -162,6 +162,12 @@ test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 
   // Nama am (tiada nama dalam OSM) tidak disebut; yang bernama dipilih walaupun lebih jauh sedikit
   assert.strictEqual(c.f(pt, [{ title: 'Masjid / surau', lat: 3.1, lng: 101.7 }, { title: 'Stesen minyak', lat: 3.1, lng: 101.7 }]), '');
   assert.strictEqual(c.f(pt, [{ title: 'Masjid / surau', lat: 3.1, lng: 101.7 }, { title: 'Shell', lat: 3.1002, lng: 101.7 }]), 'Shell');
+  // 60 m: 50 m dipilih, 78 m tidak
+  assert.strictEqual(c.f(pt, [{ title: 'Shell', lat: 3.10045, lng: 101.7 }]), 'Shell');
+  assert.strictEqual(c.f(pt, [{ title: 'Shell', lat: 3.1007, lng: 101.7 }]), '');
+  // Arahan "sekarang" (<= 40 m) turut menyebut mercu tanda bila arahan 300 m tidak sempat (laluan pendek); tidak diulang jika sudah disebut
+  assert.match(s2, /speak\(next\.text \+ \(next\.lm && !said\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turn'\)/);
+  assert.match(s2, /said\.lm = !!next\.lm;/);
   for (const file of files) {
     const t = clientScript(file);
     assert.match(t, /next\.text \+ \(next\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turnEarly'/, file);

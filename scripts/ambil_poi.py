@@ -57,7 +57,7 @@ def make_item(cat, get, lat, lng):
     """[lat, lng, tajuk, sub] atau None jika koordinat tidak sah / di Singapura."""
     if not (-90 <= lat <= 90 and -180 <= lng <= 180) or in_singapore(lat, lng):
         return None
-    title = clean(get('name') or get('brand') or get('operator')) or LABEL[cat]
+    title = clean(get('name') or get('name:ms') or get('alt_name') or get('short_name') or get('name:en') or get('brand') or get('operator')) or LABEL[cat]
     brand = clean(get('brand'))
     sub = clean(' · '.join(x for x in [brand if brand and brand != title else '', clean(get('addr:street'))] if x))
     return [round(lat, 5), round(lng, 5), title, sub]

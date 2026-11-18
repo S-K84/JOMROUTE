@@ -1175,3 +1175,23 @@ test('IndexUji.html: menu ☰ pemilik ada ukuran skrin; app biasa tiada', async 
     } finally { await close(); }
   }
 });
+
+// ---- Saluran uji: halaman terlebih lebar/dizum dicatat pada telefon dan dipaparkan dalam baris "Skrin" (siasat Android terpotong)
+test('IndexUji.html: noteSkrin mencatat bila halaman lebih lebar daripada skrin, dan baris Skrin memaparkannya', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      localStorage.removeItem('jk_skrin'); memStore.jk_skrin = undefined; delete memStore.jk_skrin;
+      noteSkrin();
+      const normal = store.get('jk_skrin');
+      Object.defineProperty(window, 'innerWidth', { value: 3000, configurable: true });
+      noteSkrin();
+      state.isOwner = true; renderDrawer();
+      return { normal, rec: store.get('jk_skrin'), txt: ($('skrinInfo') || {}).textContent };
+    });
+    assert.strictEqual(r.normal, null);
+    assert.match(r.rec, /^\d\d:\d\d lebar 3000, halaman \d+, skala /);
+    assert.ok(r.txt.includes('terpotong/dizum terakhir: ' + r.rec), r.txt);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

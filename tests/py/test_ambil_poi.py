@@ -26,6 +26,9 @@ class T(unittest.TestCase):
     def test_item_tajuk_sub_dan_pembersihan(self):
         it = p.make_item('fuel', g({'name': ' Petronas\x00 Ayer Keroh ', 'brand': 'Petronas', 'addr:street': 'Jalan Tun Razak'}), 3.15, 101.7)
         self.assertEqual(it, [3.15, 101.7, 'Petronas Ayer Keroh', 'Petronas · Jalan Tun Razak'])
+        # tiada 'name' -> guna nama lain sebelum label lalai
+        self.assertEqual(p.make_item('mosque', g({'name:ms': 'Masjid Al-Falah'}), 3.1, 101.7)[2], 'Masjid Al-Falah')
+        self.assertEqual(p.make_item('mosque', g({'alt_name': 'Surau Kampung'}), 3.1, 101.7)[2], 'Surau Kampung')
         self.assertEqual(p.make_item('toilet', g({}), 3.1, 101.7)[2:], ['Tandas', ''])                 # tiada nama -> label lalai
         self.assertEqual(p.make_item('food', g({'brand': 'KFC'}), 3.1, 101.7)[2:], ['KFC', ''])         # brand = tajuk -> sub kosong
         self.assertEqual(len(p.make_item('food', g({'name': 'x' * 200}), 3.1, 101.7)[2]), 80)
