@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.18-g';
+const APP_VERSION = '2026.11.18-h';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -786,7 +786,7 @@ function searchPlaces(token, query, lat, lng) {
   lat = Number(lat); lng = Number(lng);
   const near = isValidCoord_(lat, lng) ? { lat: lat, lng: lng } : null;
   const cache = CacheService.getScriptCache();
-  const ck = 'sp_' + hash_(query.toLowerCase() + '|' + (near ? round_(lat, 1) + ',' + round_(lng, 1) : '')).slice(0, 40);
+  const ck = 'sp2_' + hash_(query.toLowerCase() + '|' + (near ? round_(lat, 1) + ',' + round_(lng, 1) : '')).slice(0, 40);
   const hit = cache.get(ck);
   if (hit) return JSON.parse(hit);
 
@@ -801,11 +801,22 @@ function searchPlaces(token, query, lat, lng) {
   if (addr) out = out.concat(safeList_(() => geocodeNear_(addressQuery_(query), near)));
   if (out.length < 3) out = out.concat(safeList_(() => photonSearch_(query, near)));
   if (out.length < 3 && /&/.test(query)) out = out.concat(safeList_(() => photonSearch_(query.replace(/\s*&\s*/g, '&'), near)));
-  if (!addr && out.length < 3) out = out.concat(safeList_(() => geocodeNear_(query, near)));
+  // Photon kadang memulangkan tempat lain yang sebahagian namanya sama (cth. 7 klinik, tiada "Beserah"): jika tiada hasil yang
+  // mengandungi semua perkataan carian, tanya Google juga dan letakkan jawapannya dahulu.
+  if (!addr && (out.length < 3 || !coversQuery_(out, query))) {
+    const g = safeList_(() => geocodeNear_(query, near));
+    out = out.length < 3 ? out.concat(g) : g.concat(out);
+  }
   out = dedupePlaces_(out).slice(0, 8);
   if (!out.length && st.limited) throw new Error('Terlalu banyak permintaan. Cuba lagi nanti.');
   if (!st.limited) try { cache.put(ck, JSON.stringify(out), 3600); } catch (e) { /* abaikan */ }
   return out;
+}
+
+/** Adakah mana-mana hasil mengandungi SEMUA perkataan carian (>= 3 huruf) dalam tajuk/alamatnya? */
+function coversQuery_(list, query) {
+  const words = query.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+  return !words.length || list.some(p => words.every(w => (p.title + ' ' + p.sub).toLowerCase().indexOf(w) >= 0));
 }
 
 function placeOut_(title, sub, lat, lng, src) {
