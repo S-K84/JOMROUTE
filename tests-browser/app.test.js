@@ -895,8 +895,8 @@ for (const file of FILES) test(`${file}: storan kosong, server jawab selepas 6 s
 });
 
 // ---- Saiz teks Besar: kekal selepas storan dibuang (dari server) dan laci menu tidak menutup seluruh skrin
-test('IndexUji.html: saiz teks Besar dari server dipakai bila storan kosong; laci ☰ meninggalkan ruang peta untuk ditutup', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: saiz teks Besar dari server dipakai bila storan kosong; laci ☰ meninggalkan ruang peta untuk ditutup`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.addInitScript('localStorage.clear(); window.__override = { loadPrefs: () => ({ t: 1, name: "Ali", voice: "en", settings: { textSize: "large" } }) };');
     await page.reload();
