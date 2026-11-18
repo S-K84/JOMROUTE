@@ -40,3 +40,17 @@ test('klien: petua pautan Google Maps juga bila hasil ada tetapi tiada yang meng
   assert.strictEqual(c.f('a b', [R('X')]), false);   // tiada perkataan >= 3 huruf → tiada petua
   assert.match(src, /rows \+ \(noFullMatch\(q, res\) \? MAPS_TIP : ''\)/);
 });
+
+test('klien: hasil carian disusun — sepadan penuh dahulu, tekaan jalan terakhir, dalam kumpulan ikut jarak (saluran uji)', () => {
+  const vm = require('node:vm'), { clientScript } = require('./helpers');
+  const src = clientScript('IndexUji.html');
+  const c = {};
+  vm.runInNewContext('const dist = (a, b) => Math.abs(a.lat - b.lat);' + src.match(/function rankPlaces\([^)]*\) \{[\s\S]*?\n\}/)[0] + ';this.f = rankPlaces;', c);
+  const P = (title, lat, src, sub) => ({ title, sub: sub || '', lat, lng: 0, src: src || 'osm' });
+  const me = { lat: 0, lng: 0 };
+  const res = [P('Klinik Kesihatan Kuantan', 9), P('Klinik Kesihatan Balok', 4.2), P('Balok Kuantan', 4.3, 'alamat', 'Anggaran · Kampung Balok'), P('Klinik Kesihatan Sungai Ular', 17)];
+  assert.deepStrictEqual(c.f('klinik kesihatan balok', res, me).map(p => p.title),
+    ['Klinik Kesihatan Balok', 'Klinik Kesihatan Kuantan', 'Klinik Kesihatan Sungai Ular', 'Balok Kuantan']);
+  assert.deepStrictEqual(c.f('klinik', res, null), res);     // tiada lokasi → susunan server
+  assert.match(src, /rankPlaces\(q, await call\('searchPlaces'/);
+});
