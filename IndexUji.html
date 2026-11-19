@@ -238,6 +238,9 @@
     .place-row:last-child { border-bottom:0; }
     .place-row .ic { flex:none; width:28px; display:flex; justify-content:center; color:var(--fg); font-size:22px; }
     .place-row .tx { flex:1; min-width:0; }
+    .fav-star { flex:none; width:44px; height:44px; margin:-8px -10px -8px 0; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .fav-star.on { color:#ffb300; }
+    .fav-star.on svg { fill:currentColor; }
     .place-row .tt { font-weight:700; font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .place-row .st { color:var(--muted); font-size:14px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
@@ -1377,7 +1380,7 @@ const EN = {
   'Cuba destinasi yang dekat dengan jalan raya, atau tukar mod perjalanan.':
     'Try a destination near a road, or change the travel mode.', 'Titik singgah dibatalkan.': 'Stop cancelled.',
   // Pentadbir
-  'Anda sudah mencadang kamera di sini.': 'You have already suggested a camera here.', 'Senarai cadangan penuh. Cuba lagi nanti.': 'The suggestion list is full. Try again later.', 'Cadangan tidak dijumpai.': 'Suggestion not found.',
+  'Tersimpan': 'Saved', 'Anda sudah mencadang kamera di sini.': 'You have already suggested a camera here.', 'Senarai cadangan penuh. Cuba lagi nanti.': 'The suggestion list is full. Try again later.', 'Cadangan tidak dijumpai.': 'Suggestion not found.',
   '📷 Cadang kamera di sini': '📷 Suggest a camera here', 'Cadangan kamera dihantar. Pemilik akan menyemaknya. Terima kasih! 🙏': 'Camera suggestion sent. The owner will review it. Thank you! 🙏', 'Seseorang sudah mencadang kamera di sini. Cadangan anda ditambah. Terima kasih!': 'Someone already suggested a camera here. Yours was added. Thank you!', 'Cadangan kamera': 'Camera suggestions', 'Tiada cadangan kamera.': 'No camera suggestions.', '📋 Salin CSV': '📋 Copy CSV', '📋 Baris CSV disalin. Tampal dalam data/kamera-tambahan.csv.': '📋 CSV line copied. Paste it into data/kamera-tambahan.csv.', '✅ Selesai (buang)': '✅ Done (remove)', 'Cadangan dibuang.': 'Suggestion removed.',
   'Kuota (global)': 'Quota (global)', 'Laporan aktif terkini': 'Latest active reports', 'Pengguna disekat': 'Blocked users',
   'Pengguna aktif (5 min)': 'Active users (5 min)', 'Pengguna (1 jam)': 'Users (1 hour)', 'Laporan aktif': 'Active reports',
@@ -1843,13 +1846,15 @@ function toggleFav(pl) {
   return !has;
 }
 
-function placeRow(pl, icon, act, right) {
+function placeRow(pl, icon, act, right, star) {
   return `<button class="place-row" data-act="${act}" data-lat="${Number(pl.lat)}" data-lng="${Number(pl.lng)}"
     data-title="${esc(pl.title)}" data-sub="${esc(pl.sub)}">
     <span class="ic">${icon}</span>
     <span class="tx"><div class="tt">${esc(pl.title)}</div>${pl.sub ? `<div class="st">${esc(pl.sub)}</div>` : ''}</span>` +
-    (right ? `<span class="sval" style="flex:none">${esc(right)}</span>` : '') + '</button>';
+    (right ? `<span class="sval" style="flex:none">${esc(right)}</span>` : '') +
+    (star ? `<span class="fav-star${isFavPlace(pl) ? ' on' : ''}" role="button" aria-label="Simpan / buang tempat" data-fav="1">${ICON.star}</span>` : '') + '</button>';
 }
+const isFavPlace = pl => (places().favs || []).some(x => samePlace(x, pl));
 function rowPlace(el) {
   return { title: el.dataset.title, sub: el.dataset.sub, lat: Number(el.dataset.lat), lng: Number(el.dataset.lng) };
 }
@@ -1863,13 +1868,19 @@ function renderHome() {
     chip('💼', 'Kerja', p.work ? 'go' : 'set-work', p.work) +
     (p.favs || []).map(f => chip('🔖', f.title, 'go', f)).join('');
   $('recentList').innerHTML = (p.recent || []).length
-    ? p.recent.map(r => placeRow(r, ICON.clock, 'go')).join('')
+    ? p.recent.map(r => placeRow(r, ICON.clock, 'go', '', true)).join('')
     : '<div class="hint">Destinasi yang anda tuju akan muncul di sini.</div>';
   layout();
 }
 
 // Klik pada mana-mana baris tempat / cip
 document.addEventListener('click', e => {
+  const star = e.target.closest('.fav-star');
+  if (star) {   // ⭐ pada baris tempat: simpan / buang kegemaran tanpa membuka laluan
+    e.stopPropagation(); e.preventDefault();
+    const row = star.closest('.place-row'); if (row) star.classList.toggle('on', toggleFav(rowPlace(row)));
+    return;
+  }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act;
   if (act === 'go') { closeSearch(); goTo(rowPlace(el)); }
@@ -1967,14 +1978,14 @@ function renderSuggestions() {
   html += p.work ? placeRow(Object.assign({}, p.work, { title: 'Kerja', sub: p.work.title }), '💼', 'go')
     : '<button class="place-row" data-act="set-work"><span class="ic">💼</span><span class="tx">' +
       '<div class="tt">Kerja</div><div class="st">Tetapkan lokasi</div></span></button>';
-  html += (p.favs || []).map(f => placeRow(f, '🔖', 'go')).join('');
+  if ((p.favs || []).length) html += '<div class="sec-title">Tersimpan</div>' + p.favs.map(f => placeRow(f, '🔖', 'go', '', true)).join('');
   html += '<div class="sec-title">Berdekatan</div><div class="near-grid" id="nearChips">' + NEAR.map(([k, e]) =>
     `<button class="chip" data-near="${k}"><span class="e">${e}</span>` +
     `<span class="t">${esc(ALONG.find(x => x[0] === k)[2])}</span></button>`).join('') + '</div>';
   html += `<button class="place-row" data-act="paste-loc"><span class="ic">📋</span><span class="tx">
     <div class="tt">Tampal lokasi dari WhatsApp</div>
     <div class="st wrap">Pautan Google Maps, Waze, Apple Maps atau koordinat</div></span></button>` + linkHelp(false);
-  if ((p.recent || []).length) html += '<div class="sec-title">Terkini</div>' + p.recent.map(r => placeRow(r, ICON.clock, 'go')).join('');
+  if ((p.recent || []).length) html += '<div class="sec-title">Terkini</div>' + p.recent.map(r => placeRow(r, ICON.clock, 'go', '', true)).join('');
   $('searchBody').innerHTML = html;
 }
 
@@ -2025,7 +2036,7 @@ async function doSearch() {
     const me = state.me;
     const res = rankPlaces(q, await call('searchPlaces', token, q, me ? me.lat : null, me ? me.lng : null), me);
     if (stale()) return;
-    const rows = res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '')).join('');
+    const rows = res.map(pl => placeRow(pl, ICON.pin, 'pick', me ? fmtDist(dist(me, pl)) : '', true)).join('');
     box.innerHTML = res.length
       ? (onlyGuess(q, res)
         ? `<div class="hint" style="padding:12px 4px 4px; text-align:left">Tempat "${esc(q)}" tidak dijumpai. Ini hanya jalan yang paling hampir (anggaran).</div>${rows}` + MAPS_TIP
@@ -2050,7 +2061,7 @@ async function nearbySearch(cat) {
     box.innerHTML = `<button class="place-row" data-act="sugg"><span class="ic">‹</span>
       <span class="tx"><div class="tt">Semua cadangan</div></span></button>
       <div class="sec-title">${icon} ${esc(ALONG.find(x => x[0] === cat)[2])}</div>` +
-      (rows.length ? rows.map(x => placeRow(x.pl, icon, 'pick', fmtDist(x.d))).join('')
+      (rows.length ? rows.map(x => placeRow(x.pl, icon, 'pick', fmtDist(x.d), true)).join('')
         : '<div class="hint">Tiada dijumpai dalam 8 km.<br>Cuba kategori lain, atau taip nama tempat di kotak carian.</div>');
   } catch (e) {
     if (req === state.searchReq) box.innerHTML = '<div class="hint">' + esc(isNetErr(e) ? '📵 Tiada liputan.' : errText(e)) + '</div>';
