@@ -70,3 +70,27 @@ test('weeklyReportNow: bukan pemilik ditolak', () => {
   env.session.email = 'orang@example.com';
   assert.throws(() => env.ctx.weeklyReportNow(), /Tidak dibenarkan/);
 });
+
+test('cleanup mencatat CLEANUP_AT; getSession memulangkannya kepada pemilik sahaja', () => {
+  const env = setup();
+  const props = env.ctx.PropertiesService.getScriptProperties();
+  assert.ok(!props.getProperty('CLEANUP_AT'));
+  env.ctx.cleanup(null);                                     // pemilik boleh menjalankannya (isOwner_)
+  const at = Number(props.getProperty('CLEANUP_AT'));
+  assert.ok(at > 0 && Math.abs(at - env.clock.now) < 5000, String(at));
+  env.session.gKey = 'kunci-pemilik';
+  const own = env.ctx.getSession(null, null);
+  assert.strictEqual(own.owner, true);
+  assert.strictEqual(own.cleanupAt, at);
+});
+
+test('klien: baris "Pembersihan terakhir" memberi amaran bila > 3 jam (saluran uji)', () => {
+  const vm = require('node:vm'), { clientScript } = require('./helpers');
+  const src = clientScript('IndexUji.html');
+  const c = {};
+  vm.runInNewContext('const CLEANUP_STALE_MS = 3 * 36e5;' + src.match(/function cleanupLabel\([^)]*\) \{[\s\S]*?\n\}/)[0] + ';this.f = cleanupLabel;', c);
+  const now = new Date(2026, 10, 19, 17, 0).getTime();
+  assert.strictEqual(c.f(0, now), 'Pembersihan terakhir: belum dicatat');
+  assert.strictEqual(c.f(now - 36e5, now), 'Pembersihan terakhir: 19/11 16:00');
+  assert.strictEqual(c.f(now - 4 * 36e5, now), '⚠️ Pembersihan terakhir: 19/11 13:00 (lebih 3 jam, semak pencetus)');
+});
