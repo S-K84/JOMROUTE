@@ -1233,3 +1233,21 @@ test('IndexUji.html: ⭐ pada baris Terkini menyimpan dan membuang kegemaran, ta
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Senarai Terkini tidak boleh tergelongsor mendatar (⭐ tidak melebihi kotak senarai) — kedua-dua fail
+for (const file of FILES) test(`${file}: senarai Terkini dengan ⭐ tidak melebihi lebar kotaknya (tiada gelongsor mendatar)`, async () => {
+  const { page, errors, close } = await open(file);
+  try {
+    await page.setViewportSize({ width: 428, height: 926 });
+    const r = await page.evaluate(() => {
+      localStorage.removeItem('jk_places');
+      ['Tempat panjang untuk ujian lebar', 'B', 'C'].forEach((t, i) => addRecent({ title: t, sub: 'alamat panjang alamat panjang alamat panjang', lat: 3.1 + i, lng: 101.7 }));
+      renderHome();
+      const el = $('recentList');
+      return { sw: el.scrollWidth, cw: el.clientWidth, stars: el.querySelectorAll('.fav-star').length };
+    });
+    assert.ok(r.stars >= 3, JSON.stringify(r));
+    assert.ok(r.sw <= r.cw, JSON.stringify(r));
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
