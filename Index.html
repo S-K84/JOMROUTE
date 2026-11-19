@@ -1548,6 +1548,8 @@ const EN_RULES = [
   [/^Mood ditukar (.+)$/, m => 'Mood changed ' + m[1]], [/^📍 Lokasi dikongsi: (.+)$/, m => '📍 Shared location: ' + m[1]],
   [/^Versi (.+)$/, m => 'Version ' + m[1]],
   [/^Data titik: (\S+) · (\d+) kamera, (\d+) lampu isyarat$/, m => 'Point data: ' + m[1] + ' · ' + m[2] + ' cameras, ' + m[3] + ' traffic lights'],
+  [/^(⚠️ )?Pembersihan terakhir: (.+?)( \(lebih 3 jam, semak pencetus\))?$/, m => (m[1] || '') + 'Last cleanup: ' + (m[2] === 'belum dicatat' ? 'not recorded yet' : m[2]) + (m[3] ? ' (over 3 hours, check the trigger)' : '')],
+  [/^⚠️ Pembersihan data berhenti sejak (.+)\. Semak pencetus di Apps Script\.$/, m => '⚠️ Data cleanup stopped since ' + m[1] + '. Check the trigger in Apps Script.'],
   [/^Data titik: tiada \(guna Overpass\)$/, () => 'Point data: none (using Overpass)'],
   [/^Data had laju: (\S+) · (\d+) kawasan$/, m => 'Speed limit data: ' + m[1] + ' · ' + m[2] + ' areas'],
   [/^Data had laju: tiada \(guna Overpass\)$/, () => 'Speed limit data: none (using Overpass)'],
@@ -2519,7 +2521,7 @@ function renderDrawer() {
       / \(uji\)$/.test(APP_VERSION)
         ? sRow({ doAct: 'ujiOff', icon: lineIcon('back'), color: '#607d8b', label: 'Kembali ke versi biasa' })
         : sRow({ doAct: 'ujiOn', icon: lineIcon('flask'), color: '#7b1fa2', label: 'Buka versi uji', sub: 'Pemilik sahaja · ciri baharu sebelum dilancar' })]) : ''}
-    <p class="pop-muted" style="margin:16px 4px">JomRoute · Peta © OpenStreetMap · Laluan oleh Google<br>Versi ${APP_VERSION}${state.isOwner ? '<br><span id="titikInfo"></span><br><span id="hadInfo"></span><br><span id="poiInfo"></span>' : ''}${state.isOwner && / \(uji\)$/.test(APP_VERSION) ? '<br><span id="skrinInfo"></span>' : ''}</p>`;
+    <p class="pop-muted" style="margin:16px 4px">JomRoute · Peta © OpenStreetMap · Laluan oleh Google<br>Versi ${APP_VERSION}${state.isOwner ? '<br><span id="titikInfo"></span><br><span id="hadInfo"></span><br><span id="poiInfo"></span><br><span id="cleanupInfo"></span>' : ''}${state.isOwner && / \(uji\)$/.test(APP_VERSION) ? '<br><span id="skrinInfo"></span>' : ''}</p>`;
   if (state.isOwner) showTitikInfo();
   showSkrinInfo();
 }
@@ -2548,6 +2550,20 @@ function showSkrinInfo() {
     ', dpr ' + window.devicePixelRatio + ', fizikal ' + screen.width + lebar +
     (store.get('jk_skrin') ? ' · terpotong/dizum terakhir: ' + store.get('jk_skrin') : '');
 }
+/** Pemilik sahaja: bila pembersihan setiap jam (`cleanup`) terakhir berjalan; amaran jika > 3 jam (pencetus mungkin berhenti / projek dalam Sampah). */
+const CLEANUP_STALE_MS = 3 * 36e5;
+function cleanupLabel(at, now) {
+  if (!at) return 'Pembersihan terakhir: belum dicatat';
+  const d = new Date(at), p = n => ('0' + n).slice(-2);
+  const t = d.getDate() + '/' + (d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  return now - at > CLEANUP_STALE_MS ? '⚠️ Pembersihan terakhir: ' + t + ' (lebih 3 jam, semak pencetus)' : 'Pembersihan terakhir: ' + t;
+}
+function showCleanupInfo() {
+  const e = $('cleanupInfo');
+  if (!e) return;
+  e.textContent = cleanupLabel(state.cleanupAt, Date.now());
+  e.style.color = state.cleanupAt && Date.now() - state.cleanupAt > CLEANUP_STALE_MS ? '#d32f2f' : '';
+}
 /** Pemilik sahaja: tarikh & bilangan data titik (fail bulanan) di bawah versi dalam menu, untuk nampak jika tugas bulanan berhenti. */
 function showTitikInfo() {
   loadTitik().then(d => {
@@ -2558,6 +2574,7 @@ function showTitikInfo() {
     const e = $('hadInfo');
     if (e) e.textContent = d ? 'Data had laju: ' + d.t + ' · ' + d.k.length + ' kawasan' : 'Data had laju: tiada (guna Overpass)';
   });
+  showCleanupInfo();
   loadPoiIndex().then(d => {
     const e = $('poiInfo');
     if (e) e.textContent = d ? 'Data tempat: ' + d.t + ' · ' + Object.keys(d.k).reduce((n, c) => n + d.k[c].length, 0) + ' kawasan' : 'Data tempat: tiada (guna Overpass)';
@@ -5337,7 +5354,8 @@ function loadAcceptedCams() {
 call('getSession', prevToken, pendingOld).then(async s => {
   token = s.token; store.set('jk_token', token);
   loadAcceptedCams(); loadHotspots();
-  state.isOwner = s.owner === true;
+  state.isOwner = s.owner === true; state.cleanupAt = Number(s.cleanupAt) || 0;
+  if (state.isOwner && state.cleanupAt && Date.now() - state.cleanupAt > CLEANUP_STALE_MS) toast('⚠️ Pembersihan data berhenti sejak ' + cleanupLabel(state.cleanupAt, Date.now()).replace(/^⚠️ Pembersihan terakhir: /, '').replace(/ \(.*$/, '') + '. Semak pencetus di Apps Script.', true);
   if (TRACK) return startTracking();
   await loadPrefsNow();
   if (s.migrate) offerMigration(pendingOld || prevToken, s.migrate); else store.del('jk_token_old');

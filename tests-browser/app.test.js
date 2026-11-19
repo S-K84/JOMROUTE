@@ -1314,8 +1314,8 @@ for (const file of FILES) test(`${file}: dalam teks Besar lembaran modal (Cari d
 });
 
 // ---- Menu ☰ pemilik: baris "Pembersihan terakhir" (amaran bila > 3 jam) dan terjemahan English (saluran uji)
-test('IndexUji.html: menu ☰ pemilik memaparkan "Pembersihan terakhir" dan memberi amaran bila lama', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: menu ☰ pemilik memaparkan "Pembersihan terakhir" dan memberi amaran bila lama`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       state.isOwner = true;
