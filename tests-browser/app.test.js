@@ -1294,3 +1294,21 @@ test('IndexUji.html: Cari di sepanjang laluan — ‹ kembali dari hasil ke sena
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Teks Besar (zoom 1.18): lembaran modal tidak melebihi skrin, jadi tajuk & ✕ tidak terkeluar di atas (saluran uji)
+test('IndexUji.html: dalam teks Besar lembaran modal (Cari di sepanjang laluan) kekal dalam skrin', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.setViewportSize({ width: 390, height: 700 });
+    const r = await page.evaluate(() => {
+      document.body.classList.add('big-text');
+      state.navigating = true; openAlong();
+      $('alongList').innerHTML = Array.from({ length: 40 }, (_, i) => `<div class="place-row"><span class="tx"><div class="tt">Tempat ${i}</div></span></div>`).join('');
+      const s = document.querySelector('#alongModal .sheet').getBoundingClientRect(), b = $('alongClose').getBoundingClientRect();
+      return { top: s.top, height: s.height, closeTop: b.top, vh: innerHeight };
+    });
+    assert.ok(r.top >= 0 && r.height <= r.vh, JSON.stringify(r));
+    assert.ok(r.closeTop >= 0, JSON.stringify(r));
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
