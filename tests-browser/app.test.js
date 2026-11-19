@@ -1211,3 +1211,25 @@ test('IndexUji.html: nama jalan panjang dibungkus dua baris dalam pil, tidak ter
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- ⭐ pada baris "Terkini": simpan / buang kegemaran tanpa membuka laluan (saluran uji)
+test('IndexUji.html: ⭐ pada baris Terkini menyimpan dan membuang kegemaran, tanpa memulakan laluan', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      localStorage.removeItem('jk_places');
+      addRecent({ title: 'Klinik Uji', sub: 'Kuantan', lat: 3.86, lng: 103.37 });
+      const star = () => document.querySelector('#recentList .fav-star');
+      star().click();
+      const afterOn = { favs: places().favs.length, on: star().classList.contains('on'), chip: $('chips').textContent.includes('Klinik Uji') };
+      star().click();
+      return { afterOn, favsOff: places().favs.length, onOff: star().classList.contains('on'), routes: state.routes.length, navigating: !!state.navigating };
+    });
+    assert.deepStrictEqual(r.afterOn, { favs: 1, on: true, chip: true });
+    assert.strictEqual(r.favsOff, 0);
+    assert.strictEqual(r.onOff, false);
+    assert.strictEqual(r.routes, 0);
+    assert.strictEqual(r.navigating, false);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
