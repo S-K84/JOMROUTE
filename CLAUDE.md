@@ -1,6 +1,6 @@
 # CLAUDE.md — panduan untuk Claude (dan pembangun) dalam repo JalanKita
 
-JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); nama hamparan Drive kekal "JalanKita …") ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
+JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); sejak 19 Nov 2026 projek Apps Script & hamparan data dinamakan "JomRoute"; hamparan sandaran masih "JalanKita — Sandaran") ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
 (pangkalan data), **Leaflet + OpenStreetMap** (peta). Baca `README.md` untuk gambaran ciri dan tempat data disimpan.
 
 ## Pemilik & bahasa
@@ -75,6 +75,18 @@ JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahar
 - **PR #5 (2026.11.04-b) gagal di Safari iPhone** dengan `SyntaxError: Unexpected EOF (baris 1946)` walaupun lulus semua ujian
   dan sah dalam V8/acorn/esprima/QuickJS; ditarik balik dalam PR #6. Skrin ralat kini memaparkan diagnostik (panjang & hujung
   skrip yang diterima pelayar) untuk siasatan melalui saluran uji.
+- **Had 200 versi Apps Script (19 Nov 2026):** setiap `clasp deploy` mencipta satu versi, dan satu projek hanya boleh ada 200. Bila penuh, langkah `deploy` gagal dengan
+  "Cannot create more versions: Script has reached the limit of 200 versions" (`clasp push` sudah berjaya, tetapi `/exec` kekal pada versi lama; ujian tetap hijau).
+  Pemilik padam versi lama di Apps Script (Project history, ikon jam; versi 1-60 dipadam 19 Nov, tinggal ~140). **Jangan padam versi yang digunakan deployment** (semak Deploy → Manage deployments;
+  deployment aktif ialah "GitHub <komit>"). Kemudian GitHub Actions → larian yang gagal → Re-run failed jobs. Kadar 28 Okt-19 Nov ≈ 7 versi sehari, jadi **kelompokkan perubahan**
+  dalam satu PR dan jangan salin ke app biasa terlalu kerap. Setiap merge ke `main` (termasuk PR dokumen sahaja dan komit data oleh bot) menjalankan deploy dan menggunakan satu versi.
+- **Projek Apps Script pernah masuk Sampah (19 Nov 2026):** projek (terikat hamparan data; hamparan turut masuk Sampah) didapati dalam Sampah. App terus berjalan tetapi pencetus `cleanup` (dan sandaran mingguan)
+  berhenti sejak 11 Nov. Dipulihkan dengan "Take out of trash" → "Restore project", kemudian `setup()` dijalankan semula (selamat diulang: ia membaca `SHEET_ID`, mengekalkan `TOKEN_SECRET`, dan memasang semula pencetus
+  setiap jam); pencetus berjalan semula. Jika "Last run" pencetus di `script.google.com/home/triggers` lama, semak juga Sampah. Item Sampah luput kekal selepas lebih kurang 30 hari (tempoh tepat tidak pasti).
+- **Mencari projek Apps Script yang betul:** ia terikat pada hamparan DATA ("JomRoute"), bukan hamparan "JalanKita — Sandaran" (hanya sandaran mingguan dalam Drive pemilik). Menekan Extensions → Apps Script
+  dari hamparan lain mencipta projek KOSONG baharu: jangan guna. Cara paling cepat: `script.google.com/home/triggers` (baris `cleanup` membuka projek yang betul).
+- **Kotak kebenaran lokasi iPhone:** muncul dari Chrome untuk alamat `...script.googleusercontent.com` (bukan kod JomRoute). Tetapan Chrome → Location = While Using the App sudah betul pada telefon pemilik;
+  "Allow" sekali biasanya cukup.
 
 ## Ujian
 ```bash
