@@ -5,6 +5,15 @@ name: Deploy ke Apps Script
 on:
   push:
     branches: [main]
+    # Hanya fail yang dihantar ke Apps Script (lihat .claspignore) mencetuskan deploy: setiap deploy menggunakan satu daripada had 200 versi projek.
+    # PR dokumen/ujian/skrip/data tidak perlu deploy. Untuk deploy paksa: Actions → Deploy ke Apps Script → Run workflow.
+    paths:
+      - Code.gs
+      - Index.html
+      - IndexUji.html
+      - appsscript.json
+      - .claspignore
+      - .github/workflows/deploy.yml
   workflow_dispatch:
 
 permissions:
