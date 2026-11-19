@@ -1271,3 +1271,26 @@ test('IndexUji.html: lembaran Cari di sepanjang laluan ada butang ✕ melekat ya
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- "Cari di sepanjang laluan": pilih kategori → hanya hasil; butang ‹ kembali ke senarai kategori (saluran uji)
+test('IndexUji.html: Cari di sepanjang laluan — ‹ kembali dari hasil ke senarai kategori', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      state.navigating = true; openAlong();
+      const vis = id => getComputedStyle($(id)).display !== 'none';
+      const start = { cats: vis('alongCats'), back: vis('alongBack') };
+      document.querySelector('#alongCats [data-along="fuel"]').click();
+      const detail = { cats: vis('alongCats'), back: vis('alongBack') };
+      $('alongList').innerHTML = '<div class="hint">hasil</div>';
+      $('alongBack').click();
+      const after = { cats: vis('alongCats'), back: vis('alongBack'), list: $('alongList').textContent, open: $('alongModal').style.display !== 'none',
+        sel: document.querySelectorAll('#alongCats .rbtn.sel').length };
+      return { start, detail, after };
+    });
+    assert.deepStrictEqual(r.start, { cats: true, back: false });
+    assert.deepStrictEqual(r.detail, { cats: false, back: true });
+    assert.deepStrictEqual(r.after, { cats: true, back: false, list: 'Pilih apa yang anda cari di hadapan.', open: true, sel: 0 });
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
