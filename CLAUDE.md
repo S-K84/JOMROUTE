@@ -1,6 +1,6 @@
 # CLAUDE.md — panduan untuk Claude (dan pembangun) dalam repo JalanKita
 
-JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); sejak 19 Nov 2026 projek Apps Script & hamparan data dinamakan "JomRoute"; hamparan sandaran masih "JalanKita — Sandaran") ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
+JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); sejak 19 Nov 2026 projek Apps Script & hamparan data dinamakan "JomRoute"; hamparan sandaran mingguan kini "JomRoute — Sandaran"; kod mencari hamparan melalui ID `SHEET_ID`/`BACKUP_ID`, bukan nama, jadi menukar nama selamat; tajuk e-mel mingguan dalam `Code.gs` masih menulis "JalanKita — Sandaran") ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
 (pangkalan data), **Leaflet + OpenStreetMap** (peta). Baca `README.md` untuk gambaran ciri dan tempat data disimpan.
 
 ## Pemilik & bahasa
@@ -83,7 +83,7 @@ JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahar
 - **Projek Apps Script pernah masuk Sampah (19 Nov 2026):** projek (terikat hamparan data; hamparan turut masuk Sampah) didapati dalam Sampah. App terus berjalan tetapi pencetus `cleanup` (dan sandaran mingguan)
   berhenti sejak 11 Nov. Dipulihkan dengan "Take out of trash" → "Restore project", kemudian `setup()` dijalankan semula (selamat diulang: ia membaca `SHEET_ID`, mengekalkan `TOKEN_SECRET`, dan memasang semula pencetus
   setiap jam); pencetus berjalan semula. Jika "Last run" pencetus di `script.google.com/home/triggers` lama, semak juga Sampah. Item Sampah luput kekal selepas lebih kurang 30 hari (tempoh tepat tidak pasti).
-- **Mencari projek Apps Script yang betul:** ia terikat pada hamparan DATA ("JomRoute"), bukan hamparan "JalanKita — Sandaran" (hanya sandaran mingguan dalam Drive pemilik). Menekan Extensions → Apps Script
+- **Mencari projek Apps Script yang betul:** ia terikat pada hamparan DATA ("JomRoute"), bukan hamparan "JomRoute — Sandaran" (hanya sandaran mingguan dalam Drive pemilik; dahulu "JalanKita — Sandaran"). Menekan Extensions → Apps Script
   dari hamparan lain mencipta projek KOSONG baharu: jangan guna. Cara paling cepat: `script.google.com/home/triggers` (baris `cleanup` membuka projek yang betul).
 - **Kotak kebenaran lokasi iPhone:** muncul dari Chrome untuk alamat `...script.googleusercontent.com` (bukan kod JomRoute). Tetapan Chrome → Location = While Using the App sudah betul pada telefon pemilik;
   "Allow" sekali biasanya cukup.
