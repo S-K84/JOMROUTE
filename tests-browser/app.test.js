@@ -1312,3 +1312,25 @@ for (const file of FILES) test(`${file}: dalam teks Besar lembaran modal (Cari d
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Menu ☰ pemilik: baris "Pembersihan terakhir" (amaran bila > 3 jam) dan terjemahan English (saluran uji)
+test('IndexUji.html: menu ☰ pemilik memaparkan "Pembersihan terakhir" dan memberi amaran bila lama', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      state.isOwner = true;
+      state.cleanupAt = Date.now() - 36e5; renderDrawer();
+      const ok = { t: $('cleanupInfo').textContent, red: $('cleanupInfo').style.color };
+      state.cleanupAt = Date.now() - 5 * 36e5; renderDrawer();
+      const lama = { t: $('cleanupInfo').textContent, red: $('cleanupInfo').style.color };
+      state.isOwner = false; renderDrawer();
+      return { ok, lama, userBiasa: !!$('cleanupInfo') };
+    });
+    assert.match(r.ok.t, /^Pembersihan terakhir: \d+\/\d+ \d\d:\d\d$/);
+    assert.strictEqual(r.ok.red, '');
+    assert.match(r.lama.t, /^⚠️ Pembersihan terakhir: .+\(lebih 3 jam, semak pencetus\)$/);
+    assert.ok(r.lama.red, 'amaran patut berwarna');
+    assert.strictEqual(r.userBiasa, false);
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});

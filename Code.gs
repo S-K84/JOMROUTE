@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.19-h';
+const APP_VERSION = '2026.11.19-i';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -199,6 +199,8 @@ function getSession(storedToken, oldToken) {
     const uid = 'g_' + hash_(gKey).slice(0, 20);
     // owner hanya untuk paparan menu; setiap fungsi pentadbir menyemak isOwner_() sekali lagi di server
     const out = { token: uid + '.' + sign_(uid), owner: isOwner_() };
+    // Pemilik sahaja: bila `cleanup` terakhir berjalan, supaya menu boleh memberi amaran jika pencetus berhenti (cth. projek masuk Sampah, 11-19 Nov 2026)
+    if (out.owner) out.cleanupAt = Number(PropertiesService.getScriptProperties().getProperty('CLEANUP_AT')) || 0;
     const oldId = tokenId_(oldToken || storedToken);
     if (oldId && oldId !== uid) {
       carryBan_(oldId, uid);
@@ -1335,6 +1337,7 @@ function cleanup(e) {
     pruneSheet_(stats, STATS_HEADERS.length,
       x => new Date(x[6] || x[5]).getTime() > now - CONFIG.STATS_RETAIN_DAYS * 864e5);
     rebuildReports_();
+    PropertiesService.getScriptProperties().setProperty('CLEANUP_AT', String(Date.now()));
   } finally {
     lock.releaseLock();
   }
