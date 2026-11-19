@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.19-g';
+const APP_VERSION = '2026.11.19-h';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -151,7 +151,7 @@ function setup() {
   if (id) {
     ss = SpreadsheetApp.openById(id);
   } else {
-    ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.create('JalanKita - Pangkalan Data');
+    ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.create('JomRoute - Pangkalan Data');
     props.setProperty('SHEET_ID', ss.getId());
   }
   if (!props.getProperty('TOKEN_SECRET')) {
@@ -1377,14 +1377,14 @@ function weeklySummary_(now) {
   };
 }
 
-/** Salin helaian data ke hamparan "JalanKita — Sandaran" (dalam Drive pemilik); simpan BACKUP_KEEP_ minggu terakhir. */
+/** Salin helaian data ke hamparan "JomRoute — Sandaran" (dalam Drive pemilik); simpan BACKUP_KEEP_ minggu terakhir. */
 function backupSheets_(now) {
   const props = PropertiesService.getScriptProperties();
   const ss = SpreadsheetApp.openById(props.getProperty('SHEET_ID'));
   let bk = null;
   const id = props.getProperty('BACKUP_ID');
   if (id) { try { bk = SpreadsheetApp.openById(id); } catch (e) { bk = null; } }
-  if (!bk) { bk = SpreadsheetApp.create('JalanKita — Sandaran'); props.setProperty('BACKUP_ID', bk.getId()); }
+  if (!bk) { bk = SpreadsheetApp.create('JomRoute — Sandaran'); props.setProperty('BACKUP_ID', bk.getId()); }
   const tag = dayKey_(now);
   [SHEET_REPORTS, SHEET_STATS, SHEET_PREFS, SHEET_SHARES, SHEET_CAMOK, SHEET_CAMHIDE].forEach(name => {
     const sh = ss.getSheetByName(name);
@@ -1419,7 +1419,7 @@ function weeklyTasks_(force) {
     row('Laporan baharu', s.reports) + row('Carian laluan', s.routes) + row('Laporan aktif sekarang', s.activeReports) +
     row('"Sistem sibuk" (server penuh)', s.busy) + '</table>' +
     (s.busy > 20 ? '<p>⚠️ Server kerap sibuk minggu lepas. Beritahu pembangun.</p>' : '') +
-    (backup ? '<p>💾 Sandaran data: <a href="' + esc(backup.url) + '">JalanKita — Sandaran</a> (' + esc(backup.tag) +
+    (backup ? '<p>💾 Sandaran data: <a href="' + esc(backup.url) + '">JomRoute — Sandaran</a> (' + esc(backup.tag) +
       ', ' + BACKUP_KEEP_ + ' minggu terakhir disimpan)</p>' : '<p>⚠️ Sandaran gagal: ' + esc(backupErr) + '</p>');
   MailApp.sendEmail({ to: Session.getEffectiveUser().getEmail(), subject: 'JomRoute · Ringkasan mingguan ' + s.to,
     htmlBody: html, name: 'JomRoute' });

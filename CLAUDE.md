@@ -1,6 +1,6 @@
 # CLAUDE.md — panduan untuk Claude (dan pembangun) dalam repo JalanKita
 
-JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); sejak 19 Nov 2026 projek Apps Script & hamparan data dinamakan "JomRoute"; hamparan sandaran mingguan kini "JomRoute — Sandaran"; kod mencari hamparan melalui ID `SHEET_ID`/`BACKUP_ID`, bukan nama, jadi menukar nama selamat; tajuk e-mel mingguan dalam `Code.gs` masih menulis "JalanKita — Sandaran") ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
+JalanKita (nama paparan: **JomRoute**, ikon kereta merah di jalan menuju matahari terbit (dahulu "Jalan Malaysia", ikon Jalur Gemilang); sejak 19 Nov 2026 projek Apps Script & hamparan data dinamakan "JomRoute"; hamparan sandaran mingguan kini "JomRoute — Sandaran"; kod mencari hamparan melalui ID `SHEET_ID`/`BACKUP_ID`, bukan nama, jadi menukar nama selamat; e-mel mingguan & hamparan baharu dalam `Code.gs` turut guna "JomRoute", sejak 2026.11.19-h) ialah aplikasi navigasi & laporan trafik komuniti (ala Waze): **Google Apps Script** (server), **Google Sheets**
 (pangkalan data), **Leaflet + OpenStreetMap** (peta). Baca `README.md` untuk gambaran ciri dan tempat data disimpan.
 
 ## Pemilik & bahasa

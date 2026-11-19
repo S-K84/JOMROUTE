@@ -37,6 +37,8 @@ test('weeklyReportNow: e-mel ringkasan kepada pemilik + sandaran helaian data', 
   assert.match(env.mails[0].htmlBody, /Laporan baharu<\/td><td><b>1</);
   assert.match(env.mails[0].htmlBody, /Pengguna aktif<\/td><td><b>1</);
   assert.ok(r.backup && r.backup.url);
+  assert.match(env.mails[0].htmlBody, />JomRoute — Sandaran</);   // nama baharu (19 Nov 2026), bukan JalanKita
+  assert.doesNotMatch(env.mails[0].htmlBody, /JalanKita/);
   const names = env.bk.sheets.map(s => s.name);
   assert.ok(!names.includes('Sheet1'));
   assert.strictEqual(names.length, 6);                       // Laporan, Statistik, DataPengguna, Kongsi, KameraDiterima, KameraSembunyi
