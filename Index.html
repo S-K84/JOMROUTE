@@ -386,6 +386,12 @@
     .modal .sheet { width:100%; max-width:560px; background:var(--sheet); color:var(--fg); border-radius:22px 22px 0 0;
       padding:10px 18px calc(18px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; }
     .sheet h3 { margin:4px 0 12px; font-size:20px; }
+    .along-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin:0 -18px 8px; padding:4px 18px; background:var(--sheet); }   /* tajuk + ✕ kekal kelihatan bila senarai panjang digulung */
+    .along-head h3 { margin:0; flex:1; }
+    #alongBack { display:none; font-size:32px; line-height:1; }
+    .along-detail #alongBack { display:flex; }
+    .along-detail #alongCats { display:none; }   /* pilih kategori → hanya hasil dipaparkan; ‹ kembali ke senarai kategori */
     .rgrid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px 8px; margin:6px 0 10px; }
     .rbtn { display:flex; flex-direction:column; align-items:center; gap:8px; font-size:14px; font-weight:600; text-align:center; }
     .rbtn .c { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px;
@@ -397,6 +403,7 @@
     /* Tulisan besar: panel, banner & menu dibesarkan (peta tidak — zoom pada peta mengganggu koordinat Leaflet) */
     body.big-text #navTop, body.big-text #panel, body.big-text #home, body.big-text #setSheet, body.big-text #drawer .pane,
     body.big-text #askCard, body.big-text #toast, body.big-text .modal .sheet { zoom:1.18; }
+    body.big-text .modal .sheet { max-height:calc(92vh / 1.18); }   /* zoom menggandakan max-height juga: tanpa ini lembaran melebihi skrin dan bahagian atasnya (tajuk, ✕) terkeluar */
     /* zoom 1.18 membesarkan lebar laci juga; bahagi supaya ruang peta di kanan kekal boleh disentuh untuk menutup */
     body.big-text #drawer .pane { width:min(72vw, 305px); }
     .qr-box { background:#fff; border-radius:18px; padding:14px; width:240px; box-sizing:content-box; margin:6px auto 14px; color:#000;
@@ -761,7 +768,7 @@
   <div class="modal" id="alongModal">
     <div class="sheet">
       <span class="handle"></span>
-      <h3>Cari di sepanjang laluan</h3>
+      <div class="along-head"><button class="round" id="alongBack" aria-label="Kembali ke kategori"></button><h3>Cari di sepanjang laluan</h3><button class="round" id="alongClose" data-close aria-label="Tutup"></button></div>
       <div class="cat-grid" id="alongCats"></div>
       <div id="alongList"></div>
     </div>
@@ -4740,6 +4747,8 @@ function openAlong() {
   $('alongCats').innerHTML = ALONG.map(([k, e, t]) =>
     `<button class="rbtn" data-along="${k}"><span class="c">${e}</span>${esc(t)}</button>`).join('');
   $('alongList').innerHTML = '<div class="hint">Pilih apa yang anda cari di hadapan.</div>';
+  $('alongClose').innerHTML = ICON.x; $('alongBack').textContent = '‹';
+  $('alongModal').classList.remove('along-detail');
   $('alongModal').style.display = 'flex';
 }
 $('btnAlong').onclick = openAlong;
@@ -4750,7 +4759,16 @@ $('alongCats').addEventListener('click', e => {
   searchAlong(b.dataset.along);
 });
 
+$('alongBack').onclick = () => {   // kembali ke senarai kategori
+  state.alongReq = (state.alongReq || 0) + 1;   // keputusan carian yang lewat tiba diabaikan
+  $('alongModal').classList.remove('along-detail');
+  document.querySelectorAll('#alongCats .rbtn').forEach(x => x.classList.remove('sel'));
+  $('alongList').innerHTML = '<div class="hint">Pilih apa yang anda cari di hadapan.</div>';
+  document.querySelector('#alongModal .sheet').scrollTop = 0;
+};
+
 async function searchAlong(cat) {
+  $('alongModal').classList.add('along-detail');
   const r = state.routes[state.selRoute]; if (!r) return;
   const box = $('alongList'), along = state.meAlong || 0;
   const from = along + 300, to = Math.min(r.total, along + 60000);   // hanya laluan di HADAPAN (bukan lokasi semasa)
