@@ -74,3 +74,15 @@ test('papan tanda "Nifai" dalam arahan Google dibetulkan kepada "Nilai" (teks ba
   assert.match(st[0].text, /toward Nilai$/);
   assert.strictEqual(st[1].road, 'Nilai');
 });
+
+test('had laluan seorang pengguna: 15 sejam dan 45 setiap 6 jam, supaya beberapa akaun tidak menghabiskan kuota Maps bersama (semakan keselamatan 19 Nov 2026)', () => {
+  const env = setup(() => OK);
+  const R = () => env.route(NEAR, KL);
+  const ok = n => { for (let i = 0; i < n; i++) assert.strictEqual(R(), 'OK'); };
+  ok(15);
+  assert.match(R(), /Terlalu banyak/);                        // ke-16 dalam sejam ditolak
+  env.clock.now += 3600 * 1000 + 1; ok(15);                   // tetingkap sejam baharu: 30
+  env.clock.now += 3600 * 1000 + 1; ok(15);                   // 45 dalam kira-kira 2 jam
+  env.clock.now += 3600 * 1000 + 1;
+  assert.match(R(), /Terlalu banyak/);                        // ke-46 ditolak walaupun had sejam sudah baharu
+});
