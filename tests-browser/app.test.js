@@ -1253,8 +1253,8 @@ for (const file of FILES) test(`${file}: senarai Terkini dengan ⭐ tidak melebi
 });
 
 // ---- "Cari di sepanjang laluan": butang ✕ kekal kelihatan walaupun senarai panjang digulung, dan menutup lembaran (saluran uji)
-test('IndexUji.html: lembaran Cari di sepanjang laluan ada butang ✕ melekat yang menutupnya', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: lembaran Cari di sepanjang laluan ada butang ✕ melekat yang menutupnya`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.setViewportSize({ width: 390, height: 700 });
     const r = await page.evaluate(() => {
@@ -1273,8 +1273,8 @@ test('IndexUji.html: lembaran Cari di sepanjang laluan ada butang ✕ melekat ya
 });
 
 // ---- "Cari di sepanjang laluan": pilih kategori → hanya hasil; butang ‹ kembali ke senarai kategori (saluran uji)
-test('IndexUji.html: Cari di sepanjang laluan — ‹ kembali dari hasil ke senarai kategori', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: Cari di sepanjang laluan — ‹ kembali dari hasil ke senarai kategori`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       state.navigating = true; openAlong();
@@ -1296,8 +1296,8 @@ test('IndexUji.html: Cari di sepanjang laluan — ‹ kembali dari hasil ke sena
 });
 
 // ---- Teks Besar (zoom 1.18): lembaran modal tidak melebihi skrin, jadi tajuk & ✕ tidak terkeluar di atas (saluran uji)
-test('IndexUji.html: dalam teks Besar lembaran modal (Cari di sepanjang laluan) kekal dalam skrin', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: dalam teks Besar lembaran modal (Cari di sepanjang laluan) kekal dalam skrin`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     await page.setViewportSize({ width: 390, height: 700 });
     const r = await page.evaluate(() => {
