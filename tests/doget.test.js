@@ -42,10 +42,9 @@ test('ikon aplikasi: URL tetap ke assets/icon-180.png dalam repo, dan fail ikon 
   assert.strictEqual(b.readUInt32BE(20), 180);
 });
 
-test('zum halaman: dibenarkan hanya di saluran uji; app biasa kekal tanpa zum sehingga disahkan', () => {
-  assert.match(serve({}, false).viewport, /user-scalable=no/);
-  assert.match(serve({}, true).viewport, /user-scalable=no/);          // pemilik tanpa ?uji=1 = app biasa
-  const uji = serve({ uji: '1' }, true).viewport;
-  assert.strictEqual(uji, 'width=device-width, initial-scale=1');
-  assert.doesNotMatch(uji, /user-scalable|maximum-scale/);
+test('zum halaman: dibenarkan untuk semua (app biasa & saluran uji), tanpa maximum-scale/user-scalable', () => {
+  const want = 'width=device-width, initial-scale=1';
+  assert.strictEqual(serve({}, false).viewport, want);
+  assert.strictEqual(serve({}, true).viewport, want);
+  assert.strictEqual(serve({ uji: '1' }, true).viewport, want);
 });

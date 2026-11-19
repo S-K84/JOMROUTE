@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.19-k';
+const APP_VERSION = '2026.11.19-l';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -105,15 +105,14 @@ function doGet(e) {
   t.appUrlJson = jsonForScript_(ScriptApp.getService().getUrl() || '');
   t.versionJson = jsonForScript_(APP_VERSION + (uji ? ' (uji)' : ''));
   // Tiada setXFrameOptionsMode(ALLOWALL): halaman tidak boleh dibenam oleh laman lain (clickjacking).
-  // Saluran uji: zum halaman dibenarkan (kebolehcapaian); app biasa kekal tanpa zum sehingga disahkan di telefon.
   return t.evaluate()
     .setTitle('JomRoute')
     .setFaviconUrl(ICON_URL_)
-    .addMetaTag('viewport', uji ? VIEWPORT_UJI_ : VIEWPORT_);
+    .addMetaTag('viewport', VIEWPORT_);
 }
 
-const VIEWPORT_ = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
-const VIEWPORT_UJI_ = 'width=device-width, initial-scale=1';
+// Zum halaman dibenarkan (kebolehcapaian; disahkan di saluran uji 2026.11.19-k). touch-action dalam klien menghalang zum ketuk-dua.
+const VIEWPORT_ = 'width=device-width, initial-scale=1';
 
 /** JSON selamat untuk diletak dalam <script> (halang "</script>" dalam data). */
 function jsonForScript_(v) {
