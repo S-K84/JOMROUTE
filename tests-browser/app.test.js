@@ -1336,8 +1336,8 @@ for (const file of FILES) test(`${file}: menu ☰ pemilik memaparkan "Pembersiha
 });
 
 // ---- Sasaran sentuhan >= 44 px: pemegang panel bawah (kawasan sentuh), pautan "Tukar nama", kotak carian; touch-action (saluran uji)
-test('IndexUji.html: sasaran sentuhan 44 px pada pemegang panel, pautan Tukar nama dan kotak carian', async () => {
-  const { page, errors, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: sasaran sentuhan 44 px pada pemegang panel, pautan Tukar nama dan kotak carian`, async () => {
+  const { page, errors, close } = await open(file);
   try {
     const r = await page.evaluate(() => {
       const h = $('homeHandle').getBoundingClientRect(), cx = h.left + h.width / 2, cy = h.top + h.height / 2;
