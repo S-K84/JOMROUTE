@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.19-j';
+const APP_VERSION = '2026.11.19-k';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -52,7 +52,8 @@ const CONFIG = {
   LIMITS: {
     report:    [10, 3600],   G_report: [300, 3600],
     vote:      [40, 3600],   G_vote:   [1000, 3600],
-    route:     [30, 3600],   geocode:  [60, 3600],
+    route:     [15, 3600],   geocode:  [60, 3600],
+    route6h:   [45, 21600],  // seorang pengguna: kuota Maps global (G_maps) tidak boleh dihabiskan oleh beberapa akaun sahaja (semakan keselamatan 19 Nov 2026)
     G_maps:    [220, 21600], // kuota Maps ~1000/hari untuk Gmail; ~880/hari di sini
     G_recheck: [80, 21600],  // semakan "laluan lebih pantas" — maks ~1/3 kuota Maps, baki untuk carian & navigasi
     share:     [10, 3600],   shareUpd: [720, 3600],   shareView: [1500, 3600],
@@ -104,11 +105,15 @@ function doGet(e) {
   t.appUrlJson = jsonForScript_(ScriptApp.getService().getUrl() || '');
   t.versionJson = jsonForScript_(APP_VERSION + (uji ? ' (uji)' : ''));
   // Tiada setXFrameOptionsMode(ALLOWALL): halaman tidak boleh dibenam oleh laman lain (clickjacking).
+  // Saluran uji: zum halaman dibenarkan (kebolehcapaian); app biasa kekal tanpa zum sehingga disahkan di telefon.
   return t.evaluate()
     .setTitle('JomRoute')
     .setFaviconUrl(ICON_URL_)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    .addMetaTag('viewport', uji ? VIEWPORT_UJI_ : VIEWPORT_);
 }
+
+const VIEWPORT_ = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+const VIEWPORT_UJI_ = 'width=device-width, initial-scale=1';
 
 /** JSON selamat untuk diletak dalam <script> (halang "</script>" dalam data). */
 function jsonForScript_(v) {
@@ -1190,7 +1195,7 @@ function getRoute(token, origin, dest, opts) {
     throw new Error('Lokasi anda dikesan ' + Math.round(km) + ' km dari destinasi. Semak GPS atau matikan VPN.');
   }
   // Semakan berkala (bukan permintaan pengguna) dihadkan berasingan supaya tidak menghabiskan kuota Maps bersama
-  rateLimitAll_([['route', userId], ['G_maps']].concat(opts.recheck === true ? [['G_recheck']] : []));
+  rateLimitAll_([['route', userId], ['route6h', userId], ['G_maps']].concat(opts.recheck === true ? [['G_recheck']] : []));
   const lang = opts.lang === 'en' ? 'en' : 'ms'; // senarai dibenarkan — arahan belokan ikut bahasa suara
   // Mod: jalan kaki = WALKING; kereta & motosikal = DRIVING (servis Maps Apps Script tiada mod motosikal)
   const walk = opts.mode === 'walk';

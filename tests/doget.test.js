@@ -3,19 +3,20 @@ const assert = require('node:assert');
 const { loadCode } = require('./helpers');
 
 /** doGet dengan HtmlService olok-olok: pulangkan nama fail templat yang dihidangkan & versi yang disuntik. */
-let favicon = null;
+let favicon = null, viewport = null;
 function serve(params, isOwner) {
   let served = null;
   const env = loadCode({
     HtmlService: { createTemplateFromFile: name => {
       const t = { evaluate() { served = { file: name, version: JSON.parse(t.versionJson) }; return out; } };
-      const out = { setTitle: () => out, addMetaTag: () => out, setFaviconUrl: u => { favicon = u; return out; } };
+      const out = { setTitle: () => out, addMetaTag: (n, v) => { if (n === 'viewport') viewport = v; return out; }, setFaviconUrl: u => { favicon = u; return out; } };
       return t;
     } },
     ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/ujian/exec' }) }
   });
   env.session.email = isOwner ? env.session.owner : 'orang.lain@example.com';
   env.ctx.doGet({ parameter: params });
+  served.viewport = viewport;
   return served;
 }
 
@@ -39,4 +40,12 @@ test('ikon aplikasi: URL tetap ke assets/icon-180.png dalam repo, dan fail ikon 
   assert.strictEqual(b.slice(1, 4).toString(), 'PNG');
   assert.strictEqual(b.readUInt32BE(16), 180);
   assert.strictEqual(b.readUInt32BE(20), 180);
+});
+
+test('zum halaman: dibenarkan hanya di saluran uji; app biasa kekal tanpa zum sehingga disahkan', () => {
+  assert.match(serve({}, false).viewport, /user-scalable=no/);
+  assert.match(serve({}, true).viewport, /user-scalable=no/);          // pemilik tanpa ?uji=1 = app biasa
+  const uji = serve({ uji: '1' }, true).viewport;
+  assert.strictEqual(uji, 'width=device-width, initial-scale=1');
+  assert.doesNotMatch(uji, /user-scalable|maximum-scale/);
 });

@@ -1334,3 +1334,27 @@ for (const file of FILES) test(`${file}: menu ☰ pemilik memaparkan "Pembersiha
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- Sasaran sentuhan >= 44 px: pemegang panel bawah (kawasan sentuh), pautan "Tukar nama", kotak carian; touch-action (saluran uji)
+test('IndexUji.html: sasaran sentuhan 44 px pada pemegang panel, pautan Tukar nama dan kotak carian', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(() => {
+      const h = $('homeHandle').getBoundingClientRect(), cx = h.left + h.width / 2, cy = h.top + h.height / 2;
+      const hit = dy => document.elementFromPoint(cx, cy + dy) === $('homeHandle');
+      const hitUp = hit(-20), hitDown = hit(8);                  // mesti diukur sebelum menu/carian menutupi peta
+      state.isOwner = true; openDrawer();
+      const link = [...document.querySelectorAll('#drawerPane .link')].map(e => e.getBoundingClientRect().height);
+      $('drawer').classList.remove('open');
+      openSearch('go');
+      const q = $('q').getBoundingClientRect().height;
+      return { visual: Math.round(h.height), hitUp, hitDown, link: Math.min(...link), q: Math.round(q), ta: getComputedStyle(document.body).touchAction };
+    });
+    assert.strictEqual(r.visual, 5);                           // garisan kekal nipis
+    assert.ok(r.hitUp && r.hitDown, JSON.stringify(r));        // tetapi boleh ditekan ~20 px di atas dan 8 px di bawah
+    assert.ok(r.link >= 44, JSON.stringify(r));
+    assert.ok(r.q >= 44, JSON.stringify(r));
+    assert.strictEqual(r.ta, 'manipulation');
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
