@@ -1251,3 +1251,23 @@ for (const file of FILES) test(`${file}: senarai Terkini dengan ⭐ tidak melebi
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// ---- "Cari di sepanjang laluan": butang ✕ kekal kelihatan walaupun senarai panjang digulung, dan menutup lembaran (saluran uji)
+test('IndexUji.html: lembaran Cari di sepanjang laluan ada butang ✕ melekat yang menutupnya', async () => {
+  const { page, errors, close } = await open('IndexUji.html');
+  try {
+    await page.setViewportSize({ width: 390, height: 700 });
+    const r = await page.evaluate(() => {
+      state.navigating = true; openAlong();
+      $('alongList').innerHTML = Array.from({ length: 40 }, (_, i) => `<div class="place-row"><span class="tx"><div class="tt">Tempat ${i}</div></span></div>`).join('');
+      const sheet = document.querySelector('#alongModal .sheet'); sheet.scrollTop = sheet.scrollHeight;
+      const b = $('alongClose').getBoundingClientRect(), s = sheet.getBoundingClientRect();
+      const visible = b.height >= 40 && b.top >= s.top - 1 && b.bottom <= s.top + 80;
+      const scrolled = sheet.scrollTop > 100;
+      $('alongClose').click();
+      return { visible, scrolled, closed: $('alongModal').style.display === 'none' };
+    });
+    assert.deepStrictEqual(r, { visible: true, scrolled: true, closed: true });
+    assert.deepStrictEqual(errors, []);
+  } finally { await close(); }
+});
