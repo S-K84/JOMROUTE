@@ -289,7 +289,9 @@ for (const file of ['Index.html', 'IndexUji.html']) test(`${file}: kanvas garisa
 
 test('garis biru dilukis daripada `detail` (butiran jalan) bila ada, jatuh balik ke overview (IndexUji, 20 Nov 2026)', () => {
   const fs = require('node:fs'), path = require('node:path');
-  const h = fs.readFileSync(path.join(__dirname, '..', 'IndexUji.html'), 'utf8');
-  assert.strictEqual((h.match(/decodePolyline\(\w+\.detail \|\| \w+\.polyline\)/g) || []).length, 3);
-  assert.ok(!/decodePolyline\(\w+\.polyline\) \}\)/.test(h));
+  for (const f of ['Index.html', 'IndexUji.html']) {
+    const h = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+    assert.strictEqual((h.match(/decodePolyline\(\w+\.detail \|\| \w+\.polyline\)/g) || []).length, 3, f);
+    assert.ok(!/decodePolyline\(\w+\.polyline\) \}\)/.test(h), f);
+  }
 });
