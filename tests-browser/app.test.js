@@ -1372,6 +1372,7 @@ test('IndexUji.html: butang Back tidak keluar/memuat semula app — menutup menu
     assert.strictEqual(page.url(), url);
     assert.strictEqual(await page.evaluate(() => window.__marker), 'hidup', 'halaman dimuat semula');
     assert.strictEqual(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), false);
+    assert.strictEqual(await page.evaluate(() => window.__back.pops), 1, 'diagnostik Back tidak mencatat popstate');
     // 2) navigasi berjalan → Back tidak menamatkan navigasi, hanya mesej
     await startNav(page);
     await page.goBack().catch(() => {});

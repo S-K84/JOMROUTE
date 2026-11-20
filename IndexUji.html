@@ -2550,7 +2550,9 @@ function showSkrinInfo() {
   } catch (_) { /* abaikan */ }
   e.textContent = 'Skrin: lebar ' + window.innerWidth + ', halaman ' + de.scrollWidth + ', skala ' + (vv ? vv.scale.toFixed(2) : '?') +
     ', dpr ' + window.devicePixelRatio + ', fizikal ' + screen.width + lebar +
-    (store.get('jk_skrin') ? ' · terpotong/dizum terakhir: ' + store.get('jk_skrin') : '');
+    (store.get('jk_skrin') ? ' · terpotong/dizum terakhir: ' + store.get('jk_skrin') : '') +
+    (window.__back ? ' · Back: push ' + window.__back.push + ', sejarah ' + window.__back.len + '→' + (window.__back.len2 || '?') +
+      ', popstate ' + window.__back.pops + (window.__back.prev ? ', muat semula lalu: ' + window.__back.prev : '') : '');
 }
 /** Pemilik sahaja: bila pembersihan setiap jam (`cleanup`) terakhir berjalan; amaran jika > 3 jam (pencetus mungkin berhenti / projek dalam Sampah). */
 const CLEANUP_STALE_MS = 3 * 36e5;
@@ -5155,8 +5157,12 @@ async function sendReport(items) {
 // Butang Back pelayar (Chrome iPhone) tidak boleh keluar / memuat semula app: satu entri "pengawal" dalam sejarah, dan setiap Back
 // hanya menutup menu / panel yang terbuka. Semasa navigasi: mesej sahaja (tamat navigasi melalui ✕). Aduan 20 Nov 2026.
 (function backGuard() {
-  try { history.pushState({ jk: 1 }, ''); } catch (e) { return; }
+  // Diagnostik (pemilik, menu ☰): sama ada pushState diterima, berapa kali popstate sampai, dan apa yang berlaku sebelum muat semula terakhir
+  const dx = window.__back = { push: 'ok', len: history.length, pops: 0, prev: store.get('jk_back') || '' };
+  try { history.pushState({ jk: 1 }, ''); dx.len2 = history.length; } catch (e) { dx.push = 'ralat ' + String(e && e.message).slice(0, 40); return; }
+  window.addEventListener('pagehide', () => store.set('jk_back', 'pops ' + dx.pops + ', ' + new Date().toTimeString().slice(0, 8)));
   window.addEventListener('popstate', () => {
+    dx.pops++; store.set('jk_back', 'pops ' + dx.pops + ', ' + new Date().toTimeString().slice(0, 8));
     try { history.pushState({ jk: 1 }, ''); } catch (e) {}
     const modal = [...document.querySelectorAll('.modal')].find(m => m.style.display && m.style.display !== 'none');
     if ($('drawer').classList.contains('open')) closeDrawer();
