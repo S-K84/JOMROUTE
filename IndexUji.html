@@ -3128,7 +3128,7 @@ async function planRoute(dest, silent) {
     // Abaikan jawapan lama: navigasi sudah tamat/sampai, atau permintaan lebih baharu sedang berjalan
     if (req !== state.routeReq || (silent && !state.navigating)) return;
     if (!routes || !routes.length) throw new Error('Laluan tidak dijumpai.');
-    state.routes = routes.map(r => prepRoute(Object.assign(r, { pts: decodePolyline(r.polyline) })));
+    state.routes = routes.map(r => prepRoute(Object.assign(r, { pts: decodePolyline(r.detail || r.polyline) })));
     // Laluan disyorkan = masa Google + anggaran lewat akibat kesesakan / kemalangan yang DILAPORKAN (Google tidak tahu)
     state.selRoute = navigating() ? 0 : bestRouteIdx();
     drawRoutes();
@@ -3755,7 +3755,7 @@ async function checkFaster() {
       Object.assign(routeOpts(), { recheck: true }));
     if (!state.navigating || navId !== state.navId || !routes || !routes.length) return;
     const cur = state.routes[state.selRoute], along = state.meAlong || 0;
-    const fresh = routes.map(x => prepRoute(Object.assign(x, { pts: decodePolyline(x.polyline) })));
+    const fresh = routes.map(x => prepRoute(Object.assign(x, { pts: decodePolyline(x.detail || x.polyline) })));
     const same = fresh.find(x => routeOverlap(x, cur) >= 0.9);
     // Laluan semasa ditemui → kemas kini masa tiba & lewat dengan data trafik terkini
     if (same) cur.fresh = { sec: same.durationSec, delay: same.delaySec, left: Math.max(1, cur.total - along) };
@@ -4914,7 +4914,7 @@ async function addStop(pl) {
   try {
     const routes = await call('getRoute', token, { lat: me.lat, lng: me.lng }, { lat: dest.lat, lng: dest.lng }, routeOpts());
     if (!state.navigating || navId !== state.navId || !routes || !routes.length) return;
-    state.routes = routes.map(x => prepRoute(Object.assign(x, { pts: decodePolyline(x.polyline) }))).slice(0, 1);
+    state.routes = routes.map(x => prepRoute(Object.assign(x, { pts: decodePolyline(x.detail || x.polyline) }))).slice(0, 1);
     state.selRoute = 0; resetNavRoute(); drawRoutes(); renderVia(); onNavTick();
     toast(`🛑 Singgah di ${pl.title} · +${Math.max(0, Math.round((state.routes[0].durationSec - before) / 60))} min`);
   } catch (e) {

@@ -86,3 +86,37 @@ test('had laluan seorang pengguna: 15 sejam dan 45 setiap 6 jam, supaya beberapa
   env.clock.now += 3600 * 1000 + 1;
   assert.match(R(), /Terlalu banyak/);                        // ke-46 ditolak walaupun had sejam sudah baharu
 });
+
+/** Kod polyline Google (untuk menyediakan data ujian & menyemak hasil). */
+function encPoly(pts) {
+  let out = '', pl = 0, pg = 0;
+  const e = v => { v = v < 0 ? ~(v << 1) : v << 1; let c = ''; while (v >= 0x20) { c += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } return c + String.fromCharCode(v + 63); };
+  pts.forEach(([la, ln]) => { const a = Math.round(la * 1e5), b = Math.round(ln * 1e5); out += e(a - pl) + e(b - pg); pl = a; pg = b; });
+  return out;
+}
+function decPoly(str) {
+  const out = []; let i = 0, la = 0, ln = 0;
+  const n = () => { let r = 0, sh = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20); return r & 1 ? ~(r >> 1) : r >> 1; };
+  while (i < str.length) { la += n(); ln += n(); out.push([la / 1e5, ln / 1e5]); }
+  return out;
+}
+
+test('garis biru: server menghantar `detail` = cantuman polyline setiap langkah (bentuk jalan sebenar), bukan hanya overview yang diringkaskan (aduan 20 Nov 2026: garis lurus tersasar dari jalan)', () => {
+  const A = [[3.2, 101.7], [3.201, 101.701], [3.202, 101.7005]];   // langkah 1
+  const B = [[3.202, 101.7005], [3.203, 101.699], [3.204, 101.699]]; // langkah 2 (titik pertama = titik akhir langkah 1)
+  const step = pts => ({ html_instructions: 'Terus', distance: { text: '1 km', value: 1000 }, start_location: { lat: 3.2, lng: 101.7 },
+    polyline: { points: encPoly(pts) } });
+  const env = setup(() => ({ status: 'OK', routes: [{ summary: 'X', overview_polyline: { points: 'OVERVIEW' },
+    legs: [{ distance: { text: '2 km', value: 2000 }, duration: { text: '2 min', value: 120 }, steps: [step(A), step(B)] }] }] }));
+  const r = env.ctx.getRoute('g_t', NEAR, { lat: 3.3, lng: 101.8 }, {})[0];
+  assert.strictEqual(r.polyline, 'OVERVIEW');                       // kongsi laluan (had 20,000 aksara) kekal ringkas
+  assert.deepStrictEqual(decPoly(r.detail), A.concat(B.slice(1))); // titik sambungan tidak berganda
+});
+
+test('garis biru: tanpa polyline langkah, `detail` tiada (klien jatuh balik kepada overview)', () => {
+  const env = setup(() => ({ status: 'OK', routes: [{ summary: 'X', overview_polyline: { points: 'OVERVIEW' },
+    legs: [{ distance: { text: '2 km', value: 2000 }, duration: { text: '2 min', value: 120 },
+      steps: [{ html_instructions: 'Terus', distance: { text: '1 km', value: 1000 }, start_location: { lat: 3.2, lng: 101.7 } }] }] }] }));
+  const r = env.ctx.getRoute('g_t', NEAR, { lat: 3.3, lng: 101.8 }, {})[0];
+  assert.ok(!r.detail);
+});
