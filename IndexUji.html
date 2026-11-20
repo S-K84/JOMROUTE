@@ -1216,7 +1216,7 @@ const EN = {
   'Pautan Google Maps, Waze, Apple Maps atau koordinat': 'Google Maps, Waze, Apple Maps link or coordinates',
   'Cara salin lokasi dari WhatsApp': 'How to copy a location from WhatsApp',
     'Pautan (maps.app.goo.gl, waze.com…)': 'Link (maps.app.goo.gl, waze.com…)',
-  'Tekan lama mesej →': 'Long-press the message →', 'Salin': 'Copy', 'Tekan': 'Tap', '📋 Tampal lokasi': '📋 Paste location',
+  'Tekan lama mesej →': 'Long-press the message →', 'Tekan ✕ untuk tamatkan navigasi': 'Tap ✕ to end navigation', 'Salin': 'Copy', 'Tekan': 'Tap', '📋 Tampal lokasi': '📋 Paste location',
   'atau tampal dalam kotak carian': 'or paste into the search box', 'Pin lokasi (kotak peta kecil)': 'Location pin (small map box)',
   'Tekan pin →': 'Tap the pin →', 'Buka dalam Google Maps': 'Open in Google Maps', 'Salin pautan': 'Copy link',
   'Kembali ke JomRoute dan tampal': 'Return to JomRoute and paste', 'Lokasi langsung (Live Location)': 'Live Location',
@@ -5152,6 +5152,18 @@ async function sendReport(items) {
 }
 
 // ------------------------------------------------------------ Kawalan
+// Butang Back pelayar (Chrome iPhone) tidak boleh keluar / memuat semula app: satu entri "pengawal" dalam sejarah, dan setiap Back
+// hanya menutup menu / panel yang terbuka. Semasa navigasi: mesej sahaja (tamat navigasi melalui ✕). Aduan 20 Nov 2026.
+(function backGuard() {
+  try { history.pushState({ jk: 1 }, ''); } catch (e) { return; }
+  window.addEventListener('popstate', () => {
+    try { history.pushState({ jk: 1 }, ''); } catch (e) {}
+    const modal = [...document.querySelectorAll('.modal')].find(m => m.style.display && m.style.display !== 'none');
+    if ($('drawer').classList.contains('open')) closeDrawer();
+    else if (modal) modal.style.display = 'none';
+    else if (state.navigating) toast('Tekan ✕ untuk tamatkan navigasi');
+  });
+})();
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.modal').style.display = 'none');
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
   if (e.target === m && m.id !== 'nameModal' && m.id !== 'migrateModal') m.style.display = 'none';
