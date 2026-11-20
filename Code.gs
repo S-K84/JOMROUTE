@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.19-l';
+const APP_VERSION = '2026.11.20-a';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -1247,7 +1247,8 @@ function getRoute(token, origin, dest, opts) {
     const durSec = hasTraffic ? sum(l => l.duration_in_traffic.value) : normal;
     return {
       summary: rt.summary,
-      polyline: rt.overview_polyline.points,
+      polyline: rt.overview_polyline.points,       // ringkas: untuk kongsi laluan (had 20,000 aksara)
+      detail: detailPolyline_(legs),               // butiran jalan sebenar: untuk melukis garis biru (kosong jika tiada)
       distanceM: distM,
       distanceText: legs.length === 1 ? legs[0].distance.text : (distM / 1000).toFixed(1) + ' km',
       durationSec: durSec,
@@ -1505,6 +1506,37 @@ function sharesSheet_() {
 }
 
 /** Polyline Google: aksara ASCII sahaja, maks 20,000 aksara. Nilai lain dibuang. */
+/** Cantum polyline setiap langkah menjadi satu polyline berbutir. `overview_polyline` Google diringkaskan sehingga garis lurus
+ *  memotong selekoh dan tersasar dari jalan (aduan 20 Nov 2026). Polyline langkah bermula dengan koordinat mutlak, jadi mesti
+ *  dinyahkod & dikodkan semula, bukan disambung sebagai teks. Memulangkan '' jika tiada data atau terlalu besar. */
+function detailPolyline_(legs) {
+  const pts = [];
+  legs.forEach(l => (l.steps || []).forEach(st => {
+    const enc = st && st.polyline && typeof st.polyline.points === 'string' ? st.polyline.points : '';
+    if (!enc) return;
+    decodePoly_(enc).forEach((p, i) => {
+      const last = pts[pts.length - 1];
+      if (i === 0 && last && last[0] === p[0] && last[1] === p[1]) return;   // titik sambungan antara dua langkah
+      pts.push(p);
+    });
+  }));
+  if (pts.length < 2) return '';
+  const out = encodePoly_(pts);
+  return out.length <= 400000 ? out : '';
+}
+function decodePoly_(str) {
+  const out = []; let i = 0, la = 0, ln = 0;
+  const next = () => { let r = 0, sh = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20 && i <= str.length); return r & 1 ? ~(r >> 1) : r >> 1; };
+  while (i < str.length) { la += next(); ln += next(); out.push([la, ln]); }
+  return out;                                    // integer (darab 1e-5) supaya perbandingan tepat
+}
+function encodePoly_(pts) {
+  let out = '', pl = 0, pg = 0;
+  const enc = v => { v = v < 0 ? ~(v << 1) : v << 1; let c = ''; while (v >= 0x20) { c += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } return c + String.fromCharCode(v + 63); };
+  pts.forEach(p => { out += enc(p[0] - pl) + enc(p[1] - pg); pl = p[0]; pg = p[1]; });
+  return out;
+}
+
 function cleanPolyline_(p) {
   p = typeof p === 'string' ? p : '';
   return p.length <= 20000 && /^[\x21-\x7e]*$/.test(p) ? p : '';
