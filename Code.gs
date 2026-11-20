@@ -7,7 +7,7 @@
 
 // Versi aplikasi — SATU-SATUNYA tempat versi ditulis. Ia disuntik ke Index.html oleh doGet() (menu ☰ & skrin ralat).
 // Naikkan setiap kali kod berubah supaya mudah semak telefon sudah guna kod terkini.
-const APP_VERSION = '2026.11.20-c';
+const APP_VERSION = '2026.11.20-d';
 
 const CONFIG = {
   // ttlMin = berapa minit laporan kekal aktif sebelum luput
@@ -1194,7 +1194,9 @@ function getRoute(token, origin, dest, opts) {
     throw new Error('Lokasi anda dikesan ' + Math.round(km) + ' km dari destinasi. Semak GPS atau matikan VPN.');
   }
   // Semakan berkala (bukan permintaan pengguna) dihadkan berasingan supaya tidak menghabiskan kuota Maps bersama
-  rateLimitAll_([['route', userId], ['route6h', userId], ['G_maps']].concat(opts.recheck === true ? [['G_recheck']] : []));
+  // Pemilik dikecualikan daripada had PERIBADI (menguji memandu = banyak kiraan semula); had global G_maps kekal untuk semua.
+  const mine = isOwner_() ? [] : [['route', userId], ['route6h', userId]];
+  rateLimitAll_(mine.concat([['G_maps']], opts.recheck === true ? [['G_recheck']] : []));
   const lang = opts.lang === 'en' ? 'en' : 'ms'; // senarai dibenarkan — arahan belokan ikut bahasa suara
   // Mod: jalan kaki = WALKING; kereta & motosikal = DRIVING (servis Maps Apps Script tiada mod motosikal)
   const walk = opts.mode === 'walk';

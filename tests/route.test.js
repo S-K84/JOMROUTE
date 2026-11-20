@@ -120,3 +120,12 @@ test('garis biru: tanpa polyline langkah, `detail` tiada (klien jatuh balik kepa
   const r = env.ctx.getRoute('g_t', NEAR, { lat: 3.3, lng: 101.8 }, {})[0];
   assert.ok(!r.detail);
 });
+
+test('pemilik tidak dihadkan oleh had laluan peribadi (15/sejam, 45/6 jam) semasa menguji; pengguna lain masih dihadkan; had global G_maps kekal (20 Nov 2026: pemilik kena "Terlalu banyak permintaan")', () => {
+  const env = setup(() => OK);
+  env.session.email = env.session.owner;                         // pemilik
+  for (let i = 0; i < 50; i++) assert.strictEqual(env.route(NEAR, KL), 'OK', 'panggilan ke-' + (i + 1));
+  const other = setup(() => OK);                                  // pengguna biasa: tetap dihadkan
+  for (let i = 0; i < 15; i++) assert.strictEqual(other.route(NEAR, KL), 'OK');
+  assert.match(other.route(NEAR, KL), /Terlalu banyak/);
+});
