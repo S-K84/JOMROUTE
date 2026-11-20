@@ -1358,3 +1358,31 @@ for (const file of FILES) test(`${file}: sasaran sentuhan 44 px pada pemegang pa
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// Butang Back Chrome (aduan 20 Nov 2026: tekan Back semasa navigasi → halaman dimuat semula, app "hang")
+test('IndexUji.html: butang Back tidak keluar/memuat semula app — menutup menu dahulu, semasa navigasi hanya beri mesej', async () => {
+  const { page, close } = await open('IndexUji.html');
+  try {
+    const url = page.url();
+    await page.evaluate(() => { window.__marker = 'hidup'; });
+    // 1) menu ☰ terbuka → Back menutupnya
+    await page.evaluate(() => openDrawer());
+    await page.goBack().catch(() => {});
+    await wait(page, 300);
+    assert.strictEqual(page.url(), url);
+    assert.strictEqual(await page.evaluate(() => window.__marker), 'hidup', 'halaman dimuat semula');
+    assert.strictEqual(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), false);
+    // 2) navigasi berjalan → Back tidak menamatkan navigasi, hanya mesej
+    await startNav(page);
+    await page.goBack().catch(() => {});
+    await wait(page, 300);
+    assert.strictEqual(page.url(), url);
+    assert.strictEqual(await page.evaluate(() => window.__marker), 'hidup', 'halaman dimuat semula');
+    assert.strictEqual(await page.evaluate(() => state.navigating), true);
+    assert.match(await page.textContent('#toast'), /✕/);
+    // 3) Back berulang kali masih tidak keluar
+    await page.goBack().catch(() => {}); await page.goBack().catch(() => {});
+    await wait(page, 300);
+    assert.strictEqual(await page.evaluate(() => window.__marker), 'hidup');
+  } finally { await close(); }
+});
