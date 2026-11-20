@@ -1358,3 +1358,27 @@ for (const file of FILES) test(`${file}: sasaran sentuhan 44 px pada pemegang pa
     assert.deepStrictEqual(errors, []);
   } finally { await close(); }
 });
+
+// Peta berputar licin (aduan 20 Nov 2026: "berkedip" di selekoh) — dahulu setBearing melompat sekali sesaat
+test('IndexUji.html: putaran peta mengikut arah kereta licin dalam satu saat, bukan melompat serta-merta', async () => {
+  const { page, close } = await open('IndexUji.html');
+  try {
+    const r = await page.evaluate(async () => {
+      const w = ms => new Promise(x => setTimeout(x, ms));
+      state.manualLoc = false; state.headingUp = true;
+      setMe({ lat: 3.1, lng: 101.7, heading: 0, speed: 0, t: Date.now() }); await w(50);
+      planRoute({ title: 'Ujian', lat: 3.2, lng: 101.7 }); await w(300);
+      startNav(); await w(300);
+      let t = Date.now();
+      // satu bacaan dengan arah 0 → 40° (> 3°), kemudian sampel sudut peta pada setiap bingkai
+      t += 1000; setMe({ lat: 3.1002, lng: 101.7, heading: 0, speed: 21, t, acc: 5 }); await w(1300);
+      const mula = mapBearing();
+      t += 1000; setMe({ lat: 3.1004, lng: 101.7, heading: 40, speed: 21, t, acc: 5 });
+      const vals = [];
+      await new Promise(done => { const t0 = performance.now(); const f = () => { vals.push(mapBearing()); if (performance.now() - t0 < 1500) requestAnimationFrame(f); else done(); }; f(); });
+      return { mula, akhir: vals[vals.length - 1], bezaBerbeza: new Set(vals.map(v => Math.round(v * 10))).size, vals };
+    });
+    assert.ok(r.bezaBerbeza >= 5, 'sudut melompat: hanya ' + r.bezaBerbeza + ' nilai berbeza ' + JSON.stringify(r.vals.slice(0, 8)));
+    assert.ok(Math.abs(((r.akhir - r.mula + 540) % 360) - 180) >= 3, 'peta tidak berputar: ' + r.mula + ' → ' + r.akhir);
+  } finally { await close(); }
+});

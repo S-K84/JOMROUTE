@@ -1103,14 +1103,29 @@ const mapBearing = () => (canRotate ? map.getBearing() : 0);
 /** Pusingkan peta mengikut arah kenderaan. Hanya bila bergerak (>8 km/j) supaya peta tidak "menari" semasa berhenti. */
 function applyBearing() {
   if (!canRotate) return;
-  if (!state.headingUp) { if (Math.abs(mapBearing()) > 0.5) map.setBearing(0); return; }
+  if (!state.headingUp) { if (Math.abs(mapBearing()) > 0.5) { cancelAnimationFrame(bearAnim); map.setBearing(0); } return; }
   const me = state.me;
   if (!me || (me.speed || 0) < (S.travel === 'walk' ? 2 : 8) || state.heading == null) return;
   // Pelicin bacaan arah GPS yang bergoyang
   state.smoothHead = state.smoothHead == null ? state.heading
     : (state.smoothHead + angDiff(state.smoothHead, state.heading) * 0.5 + 360) % 360;
   const target = (360 - state.smoothHead) % 360;
-  if (Math.abs(angDiff(mapBearing(), target)) > 3) map.setBearing(target);   // abaikan goyangan kecil arah GPS
+  if (Math.abs(angDiff(mapBearing(), target)) > 3) rotateTo(target);   // abaikan goyangan kecil arah GPS
+}
+
+/** Putar peta ke sudut sasaran secara licin (seiring dengan gelongsor kedudukan, `glideMs`): setBearing serta-merta membuat seluruh peta
+ *  melompat 5-8° sekali sesaat di selekoh, nampak seperti berkedip (aduan 20 Nov 2026). */
+let bearAnim = 0;
+function rotateTo(target) {
+  cancelAnimationFrame(bearAnim);
+  const from = mapBearing(), delta = angDiff(from, target), dur = state.glideMs || 1000, t0 = performance.now();
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur);
+    map.setBearing((from + delta * k + 360) % 360);
+    updateArrow();
+    if (k < 1) bearAnim = requestAnimationFrame(step);
+  };
+  bearAnim = requestAnimationFrame(step);
 }
 
 /** Anak panah kereta & jarum kompas mengikut putaran peta (sudut skrin = arah + putaran peta). */
@@ -3139,7 +3154,7 @@ async function planRoute(dest, silent) {
       state.autoStart = false; startNav();
     } else {
       renderRouteChoices();
-      if (canRotate) map.setBearing(0);
+      if (canRotate) { cancelAnimationFrame(bearAnim); map.setBearing(0); }
       map.fitBounds(state.routeLayers[0].getBounds(), { paddingTopLeft: [40, 60], paddingBottomRight: [40, $('panel').offsetHeight + 30] });
     }
   } catch (e) {
@@ -5177,7 +5192,7 @@ $('btnCompass').onclick = () => {
 function setHeadingUp(v) {
   state.headingUp = v; store.set('jk_headup', v ? '1' : '0');
   state.smoothHead = null;
-  if (!v && canRotate) map.setBearing(0);
+  if (!v && canRotate) { cancelAnimationFrame(bearAnim); map.setBearing(0); }
   toast(v ? '🧭 Peta ikut arah perjalanan' : '🧭 Utara di atas');
   recenter();
 }
@@ -5254,7 +5269,7 @@ function applyPrefs(p) {
     hidden = p.hidden === true; store.set('jk_hidden', hidden ? '1' : '0');
     store.set('jk_tol', p.tol ? '1' : '0');
     state.headingUp = p.headup !== false; store.set('jk_headup', state.headingUp ? '1' : '0');
-    if (!state.headingUp && canRotate) map.setBearing(0);
+    if (!state.headingUp && canRotate) { cancelAnimationFrame(bearAnim); map.setBearing(0); }
     store.set('jk_prefs_t', String(p.t));
     applyTheme(); ['showSpeedo', 'showUsers', 'carIcon', 'units', 'repTypes', 'textSize'].forEach(applySetting);
     renderHome();
