@@ -1360,8 +1360,8 @@ for (const file of FILES) test(`${file}: sasaran sentuhan 44 px pada pemegang pa
 });
 
 // Peta berputar licin (aduan 20 Nov 2026: "berkedip" di selekoh) — dahulu setBearing melompat sekali sesaat
-test('IndexUji.html: putaran peta mengikut arah kereta licin dalam satu saat, bukan melompat serta-merta', async () => {
-  const { page, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: putaran peta mengikut arah kereta licin dalam satu saat, bukan melompat serta-merta`, async () => {
+  const { page, close } = await open(file);
   try {
     const r = await page.evaluate(async () => {
       const w = ms => new Promise(x => setTimeout(x, ms));
