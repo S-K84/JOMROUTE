@@ -1382,3 +1382,40 @@ for (const file of FILES) test(`${file}: putaran peta mengikut arah kereta licin
     assert.ok(Math.abs(((r.akhir - r.mula + 540) % 360) - 180) >= 3, 'peta tidak berputar: ' + r.mula + ' → ' + r.akhir);
   } finally { await close(); }
 });
+
+// Tukar nama tempat tersimpan (kegemaran) — dahulu hanya boleh dibuang (21 Nov 2026)
+test('IndexUji.html: tempat tersimpan boleh ditukar nama (Rumah & kerja > Kegemaran), nama baharu dipaparkan pada chip & disimpan; Buang masih berfungsi', async () => {
+  const { page, close } = await open('IndexUji.html');
+  try {
+    await page.evaluate(() => {
+      store.set('jk_places', JSON.stringify({ home: null, work: null, recent: [],
+        favs: [{ title: 'Jalan 1', sub: '2.85856, 101.67733', lat: 2.85856, lng: 101.67733 }, { title: '1', sub: 'x', lat: 2.9, lng: 101.7 }] }));
+      renderHome(); openSet('places');
+    });
+    await wait(page, 200);
+    // tekan baris pertama → tetingkap tukar nama dengan nama semasa
+    await page.click('#setSheet [data-do="editfav|0"]');
+    assert.strictEqual(await page.inputValue('#favInput'), 'Jalan 1');
+    await page.evaluate(() => setVoiceLang('en')); await wait(page, 200);
+    assert.strictEqual((await page.textContent('#btnFavDel')).trim(), 'Remove');
+    assert.strictEqual((await page.textContent('#btnFavSave')).trim(), 'Save name');
+    await page.evaluate(() => setVoiceLang('ms')); await wait(page, 200);
+    await page.fill('#favInput', '  Rumah Mak <b>  ');
+    await page.click('#btnFavSave');
+    await wait(page, 200);
+    const t = await page.evaluate(() => ({ favs: places().favs.map(f => f.title), chips: [...document.querySelectorAll('#chips .chip .t')].map(e => e.textContent),
+      html: document.getElementById('chips').innerHTML.includes('<b>') }));
+    assert.deepStrictEqual(t.favs, ['Rumah Mak <b>', '1']);
+    assert.ok(t.chips.includes('Rumah Mak <b>'), JSON.stringify(t.chips));
+    assert.strictEqual(t.html, false, 'nama mesti di-escape, bukan HTML');
+    // nama kosong tidak menggantikan nama lama
+    await page.click('#setSheet [data-do="editfav|1"]');
+    await page.fill('#favInput', '   ');
+    await page.click('#btnFavSave');
+    assert.deepStrictEqual(await page.evaluate(() => places().favs.map(f => f.title)), ['Rumah Mak <b>', '1']);
+    // Buang
+    await page.click('#setSheet [data-do="editfav|1"]');
+    await page.click('#btnFavDel');
+    assert.deepStrictEqual(await page.evaluate(() => places().favs.map(f => f.title)), ['Rumah Mak <b>']);
+  } finally { await close(); }
+});
