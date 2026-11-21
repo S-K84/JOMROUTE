@@ -1278,8 +1278,8 @@ const EN = {
   'Selepas 2 jam memandu tanpa henti': 'After 2 hours of non-stop driving', 'Amaran hujan lebat': 'Heavy rain alert',
   'Ramalan cuaca di sepanjang laluan (Open-Meteo)': 'Weather forecast along the route (Open-Meteo)',
   'Peringatan waktu solat': 'Prayer time reminder', 'Semasa navigasi · masjid / surau di hadapan': 'While navigating · mosque / surau ahead',
-  'Waktu solat dikira di telefon (kaedah JAKIM: Subuh 20°, Isyak 18°) — anggaran, boleh berbeza beberapa minit daripada jadual rasmi.':
-    'Prayer times are calculated on the phone (JAKIM method: Fajr 20°, Isha 18°) — estimates that may differ by a few minutes from the official schedule.',
+  'Waktu solat dikira di telefon (kaedah JAKIM: Subuh 18°, Isyak 18°) — anggaran, boleh berbeza beberapa minit daripada jadual rasmi.':
+    'Prayer times are calculated on the phone (JAKIM method: Fajr 18°, Isha 18°) — estimates that may differ by a few minutes from the official schedule.',
   'Masa untuk berehat': 'Time for a break', 'Cari R&R': 'Find R&R', 'Cari masjid / surau di hadapan?': 'Find a mosque / surau ahead?',
   'Cari': 'Search', 'Kecemasan': 'Emergency', 'Telefon 999 · hantar lokasi ke keluarga': 'Call 999 · send location to family',
   '📞 Telefon 999': '📞 Call 999', '📍 Hantar lokasi saya ke WhatsApp': '📍 Send my location to WhatsApp',
@@ -2433,7 +2433,7 @@ const PAGES = {
         sub: 'Ramalan cuaca di sepanjang laluan (Open-Meteo)' }),
       sRow({ toggle: 'prayerRemind', icon: lineIcon('landmark'), color: '#2e7d32', label: 'Peringatan waktu solat',
         sub: 'Semasa navigasi · masjid / surau di hadapan' })]) +
-    note('Waktu solat dikira di telefon (kaedah JAKIM: Subuh 20°, Isyak 18°) — anggaran, boleh berbeza beberapa minit daripada jadual rasmi.') }),
+    note('Waktu solat dikira di telefon (kaedah JAKIM: Subuh 18°, Isyak 18°) — anggaran, boleh berbeza beberapa minit daripada jadual rasmi.') }),
 
   planned: () => ({ title: 'Pemanduan dirancang', html:
     list([sRow({ toggle: 'tripSuggest', icon: lineIcon('compass'), color: '#26a69a', label: 'Cadangan perjalanan',
@@ -3909,7 +3909,7 @@ function rainAhead(pts, list, now) {
   return null;
 }
 
-// ---- Waktu solat (anggaran, kaedah JAKIM: Subuh 20°, Isyak 18°, Asar mazhab Syafie, +2 minit ihtiyat). Tanpa rangkaian.
+// ---- Waktu solat (anggaran, kaedah JAKIM: Subuh 18°, Isyak 18°, Asar mazhab Syafie, +2 minit ihtiyat). Tanpa rangkaian.
 const PRAYERS = [['subuh', 'Subuh', 'Fajr'], ['zohor', 'Zohor', 'Zuhr'], ['asar', 'Asar', 'Asr'], ['maghrib', 'Maghrib', 'Maghrib'],
   ['isyak', 'Isyak', 'Isha']];
 function prayerTimes(date, lat, lng) {
@@ -3933,7 +3933,7 @@ function prayerTimes(date, lat, lng) {
     const dec = sun(jd0 + t).decl, ang = -Math.atan(1 / (1 + Math.tan(Math.abs(lat - dec) * d2r))) * r2d;
     return angleTime(ang, t);
   };
-  const h = { subuh: angleTime(20, 5 / 24, true), zohor: noon(12 / 24), asar: asrTime(13 / 24),
+  const h = { subuh: angleTime(18, 5 / 24, true), zohor: noon(12 / 24), asar: asrTime(13 / 24),
     maghrib: angleTime(0.833, 18 / 24), isyak: angleTime(18, 18 / 24) };
   const out = {};
   // Jam UT → masa tempatan sebenar (Date); +2 minit ihtiyat seperti jadual JAKIM
