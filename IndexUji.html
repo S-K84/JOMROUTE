@@ -829,6 +829,19 @@
     </div>
   </div>
 
+  <div class="modal" id="favModal">
+    <div class="sheet">
+      <span class="handle"></span>
+      <h3>Tukar nama tempat</h3>
+      <input type="text" class="field" id="favInput" maxlength="30" placeholder="Nama tempat">
+      <div style="display:flex; gap:10px; margin-top:14px">
+        <button class="btn btn-soft" data-close>Batal</button>
+        <button class="btn btn-soft" id="btnFavDel">Buang</button>
+        <button class="btn btn-accent" id="btnFavSave" style="flex:1">Simpan nama</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="migrateModal">
     <div class="sheet">
       <span class="handle"></span>
@@ -1339,7 +1352,7 @@ const EN = {
   'Bila tiba di destinasi, JomRoute mengingatkan anda (paparan & suara) supaya memeriksa tempat duduk belakang.':
     'When you arrive, JomRoute reminds you (screen & voice) to check the back seat.',
   'Rumah, kerja & kegemaran': 'Home, work & favourites', 'Pintasan pantas untuk perjalanan biasa': 'Quick shortcuts for usual trips',
-  'Tekan ⭐ pada skrin laluan untuk simpan kegemaran.': 'Tap ⭐ on the route screen to save a favourite.', 'Tekan untuk buang': 'Tap to remove',
+  'Tekan ⭐ pada skrin laluan untuk simpan kegemaran.': 'Tap ⭐ on the route screen to save a favourite.', 'Tekan untuk tukar nama atau buang': 'Tap to rename or remove', 'Tukar nama tempat': 'Rename place', 'Nama tempat': 'Place name', 'Simpan nama': 'Save name', 'Nama disimpan.': 'Name saved.', 'Buang': 'Remove', 'Tekan untuk buang': 'Tap to remove',
   'Data anda': 'Your data', 'Tukar nama samaran': 'Change nickname',
     'Simpan Rumah, kerja & kegemaran di server': 'Save home, work & favourites on the server',
   'Matikan untuk simpan dalam telefon sahaja': 'Turn off to keep them on this phone only', 'Padam lokasi saya dari server sekarang':
@@ -2470,8 +2483,8 @@ const PAGES = {
       list([sRow({ act: 'set-home', icon: lineIcon('home'), color: '#8d6e63', label: 'Rumah', value: esc(pl.home ? pl.home.title : 'Tetapkan') }),
         sRow({ act: 'set-work', icon: lineIcon('briefcase'), color: '#6d4c41', label: 'Kerja', value: esc(pl.work ? pl.work.title : 'Tetapkan') })]) +
       sec('Kegemaran') +
-      ((pl.favs || []).length ? list(pl.favs.map((f, i) => sRow({ doAct: 'unfav|' + i, icon: lineIcon('bookmark'), color: '#ffb300',
-          label: esc(f.title), sub: 'Tekan untuk buang' })))
+      ((pl.favs || []).length ? list(pl.favs.map((f, i) => sRow({ doAct: 'editfav|' + i, icon: lineIcon('bookmark'), color: '#ffb300',
+          label: esc(f.title), sub: 'Tekan untuk tukar nama atau buang' })))
         : note('Tekan ⭐ pada skrin laluan untuk simpan kegemaran.')) };
   },
 
@@ -2701,7 +2714,7 @@ function onSettingsClick(e) {
       if (token) call('hideMe', token).then(() => toast('Lokasi anda dipadam dari server.'))
         .catch(() => toast('📵 Cuba lagi bila ada liputan.'));
     }
-    else if (a === 'unfav') { const p = places(), f = (p.favs || [])[Number(arg)]; if (f) { toggleFav(f); refreshMenus(); } }
+    else if (a === 'editfav') { const f = (places().favs || [])[Number(arg)]; if (f) { favEdit = Number(arg); $('favInput').value = f.title; $('favModal').style.display = 'flex'; } }
   }
 }
 function refreshMenus() {
@@ -5231,6 +5244,17 @@ async function deleteMine(id, btn) {
     toast('🗑️ Laporan dipadam.'); map.closePopup(); refresh();
   } catch (e) { btn.disabled = false; toast(isNetErr(e) ? '📵 Tiada liputan.' : (e.message || e)); }
 }
+let favEdit = -1;
+$('btnFavSave').onclick = () => {
+  const p = places(), f = (p.favs || [])[favEdit], name = $('favInput').value.trim().slice(0, 30);
+  if (f && name) { f.title = name; savePlaces(p); refreshMenus(); toast('Nama disimpan.'); }   // nama kosong: kekalkan nama lama
+  $('favModal').style.display = 'none';
+};
+$('btnFavDel').onclick = () => {
+  const f = (places().favs || [])[favEdit];
+  if (f) { toggleFav(f); refreshMenus(); }
+  $('favModal').style.display = 'none';
+};
 $('btnName').onclick = () => {
   userName = $('nameInput').value.trim() || 'Pemandu';
   store.set('jk_name', userName);
