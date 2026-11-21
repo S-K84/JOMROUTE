@@ -1384,8 +1384,8 @@ for (const file of FILES) test(`${file}: putaran peta mengikut arah kereta licin
 });
 
 // Tukar nama tempat tersimpan (kegemaran) — dahulu hanya boleh dibuang (21 Nov 2026)
-test('IndexUji.html: tempat tersimpan boleh ditukar nama (Rumah & kerja > Kegemaran), nama baharu dipaparkan pada chip & disimpan; Buang masih berfungsi', async () => {
-  const { page, close } = await open('IndexUji.html');
+for (const file of FILES) test(`${file}: tempat tersimpan boleh ditukar nama (Rumah & kerja > Kegemaran), nama baharu dipaparkan pada chip & disimpan; Buang masih berfungsi`, async () => {
+  const { page, close } = await open(file);
   try {
     await page.evaluate(() => {
       store.set('jk_places', JSON.stringify({ home: null, work: null, recent: [],
