@@ -3619,7 +3619,11 @@ function onNavTick() {
   state.nextTurnDist = next ? next.at - loc.along : null;
   if (next) {
     const d = next.at - loc.along, said = state.spoken[k + 1] || (state.spoken[k + 1] = {});
-    if (d <= 40 && !said.now) { said.now = said.near = said.far = 1; speak(next.text + (next.lm && !said.lm ? VOICE[voiceLang].lm(next.lm) : ''), 'turn'); }
+    if (d <= 40 && !said.now) {
+      const heard = said.near || said.far;                       // nama jalan sudah disebut pada 300/800 m: jangan ulang
+      said.now = said.near = said.far = 1;
+      speak((heard ? turnNow(next.text) : next.text) + (next.lm && !said.lm ? VOICE[voiceLang].lm(next.lm) : ''), 'turn');
+    }
     else if (d <= 300 && !said.near && (r.steps[k].distM || 0) > 400) {
       said.near = said.far = 1; said.lm = !!next.lm; speak(VOICE[voiceLang].inDist(sayDist(d)) + next.text + (next.lm ? VOICE[voiceLang].lm(next.lm) : ''), 'turnEarly');
     } else if (d <= 800 && !said.far && (r.steps[k].distM || 0) > 1500) {
@@ -4571,6 +4575,14 @@ function updateRoadLimit() {
   if (shouldSayLimit(state, state.shownLimit, Date.now())) speak(VOICE[voiceLang].limit(fmtSpeed(state.shownLimit)), 'speed');
 }
 const LIMIT_STABLE_MS = 6000, LIMIT_GAP_MS = 60000, OVER_STABLE_MS = 8000, OVER_GAP_MS = 90000;
+/** Sebutan "sekarang" (<= 40 m): arahan sahaja ("Belok kanan"), tanpa mengulang nama jalan/destinasi yang sudah disebut pada 300/800 m
+ *  (aduan 21 Nov 2026: "Lebuhraya Putrajaya - Cyberjaya" disebut berulang kali). Tiada penyambung nama jalan → teks penuh. */
+function turnNow(text) {
+  const t = String(text || '');
+  const cut = t.search(/\s+(?:onto|toward|towards|to|ke arah|menuju|ke)\s+\S/i);
+  const head = cut > 0 ? t.slice(0, cut).replace(/[\s,.-]+$/, '') : t;
+  return head.length >= 4 ? head : t;
+}
 /**
  * Sebut had laju baharu? Hanya bila ia kekal >= 6 s (had berubah-ubah / berkelip dalam data OSM tidak disebut), LEBIH RENDAH daripada yang
  * terakhir disebut (kenaikan hanya diingat; papan had sentiasa kelihatan), dan >= 60 s sejak sebutan lalu. st = state (saidLimit, saidLimitAt, limSince).

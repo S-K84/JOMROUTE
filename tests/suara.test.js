@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const vm = require('vm');
+const fs = require('fs'), path = require('path');
 const { clientScript } = require('./helpers');
 
 const files = ['Index.html', 'IndexUji.html'];
@@ -166,11 +167,36 @@ test('mercu tanda: nama tempat dalam 40 m dari titik belok ditambah pada arahan 
   assert.strictEqual(c.f(pt, [{ title: 'Shell', lat: 3.10045, lng: 101.7 }]), 'Shell');
   assert.strictEqual(c.f(pt, [{ title: 'Shell', lat: 3.1007, lng: 101.7 }]), '');
   // Arahan "sekarang" (<= 40 m) turut menyebut mercu tanda bila arahan 300 m tidak sempat (laluan pendek); tidak diulang jika sudah disebut
-  assert.match(s2, /speak\(next\.text \+ \(next\.lm && !said\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turn'\)/);
+  assert.match(s2, /speak\(\(heard \? turnNow\(next\.text\) : next\.text\) \+ \(next\.lm && !said\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turn'\)/);
   assert.match(s2, /said\.lm = !!next\.lm;/);
   for (const file of files) {
     const t = clientScript(file);
     assert.match(t, /next\.text \+ \(next\.lm \? VOICE\[voiceLang\]\.lm\(next\.lm\) : ''\), 'turnEarly'/, file);
     assert.match(t, /\.then\(\(\) => loadLandmarks\(r\)\)/, file);
+  }
+});
+
+// Aduan 21 Nov 2026: "lebuhraya putrajaya cyberjaya" disebut berulang kali. Dahulu teks penuh arahan Google disebut pada 800 m, 300 m DAN 40 m.
+const sayNow = (() => { const c = {}; vm.runInNewContext(fn('turnNow') + ';this.f = turnNow;', c); return c.f; })();
+test('sebutan "sekarang" (<= 40 m): arahan sahaja, nama jalan/destinasi tidak diulang', () => {
+  assert.strictEqual(sayNow('Belok kanan ke Lebuhraya Putrajaya - Cyberjaya/Route 29'), 'Belok kanan');
+  assert.strictEqual(sayNow('Turn right onto Lebuhraya Putrajaya - Cyberjaya/Route 29'), 'Turn right');
+  assert.strictEqual(sayNow('Take exit 10 toward Nilai'), 'Take exit 10');
+  assert.strictEqual(sayNow('Ambil susur keluar 10 ke arah Nilai'), 'Ambil susur keluar 10');
+  assert.strictEqual(sayNow('Keep left to stay on E6'), 'Keep left');
+  assert.strictEqual(sayNow('Merge onto E20'), 'Merge');
+});
+test('sebutan "sekarang": arahan tanpa nama jalan, atau yang bermaklumat penting, tidak dipendekkan', () => {
+  assert.strictEqual(sayNow('Make a U-turn'), 'Make a U-turn');
+  assert.strictEqual(sayNow('Belok kiri'), 'Belok kiri');
+  assert.strictEqual(sayNow('Belok kiri di bulatan'), 'Belok kiri di bulatan');        // "di" bukan penyambung nama jalan
+  assert.strictEqual(sayNow('Ke Jalan Ujian'), 'Ke Jalan Ujian');                      // tiada arahan sebelum nama: kekalkan
+  assert.strictEqual(sayNow(''), '');
+});
+test('kod navigasi: teks pendek hanya bila nama sudah disebut pada 300/800 m (said.near atau said.far)', () => {
+  for (const f of ['IndexUji.html']) {
+    const h = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+    assert.match(h, /const heard = said\.near \|\| said\.far;/, f);
+    assert.match(h, /speak\(\(heard \? turnNow\(next\.text\) : next\.text\)/, f);
   }
 });
