@@ -1295,7 +1295,7 @@ const EN = {
   'Tambah komen (pilihan)': 'Add a comment (optional)', 'Maksimum 5 jenis dalam satu laporan.': 'Maximum 5 types in one report.',
   'Pilih jenis laporan.': 'Choose a report type.', 'Laporan dihantar. Terima kasih! 🙏': 'Report sent. Thank you! 🙏',
   'Polis': 'Police', 'Kemalangan': 'Accident', 'Kesesakan': 'Traffic jam', 'Bahaya': 'Hazard', 'Banjir': 'Flood',
-  'Jalan Berlubang': 'Pothole', 'Kerja Jalan': 'Road works', 'Kamera AES': 'Speed camera', 'Kenderaan Rosak': 'Broken-down vehicle',
+  'Jalan Berlubang': 'Pothole', 'Kerja Jalan': 'Road works', 'Kamera AES': 'Speed camera', 'Kamera laju': 'Speed camera', 'Kenderaan Rosak': 'Broken-down vehicle',
   'Sederhana': 'Moderate', 'Teruk': 'Heavy', 'Terhenti': 'Standstill', 'Kelihatan': 'Visible', 'Tersembunyi': 'Hidden',
   'Arah bertentangan': 'Opposite direction', 'Kecil': 'Minor', 'Objek di jalan': 'Object on road', 'Haiwan': 'Animal',
   'Kenderaan di bahu jalan': 'Vehicle on shoulder', 'Jalan licin': 'Slippery road', 'Air bertakung': 'Standing water',
@@ -1765,6 +1765,12 @@ function toast(msg, warn) {
 
 // Jenis arahan yang dibenarkan bagi setiap mod "Arahan suara" (null = semua)
 const VOICE_KINDS = { normal: null, less: ['turn', 'hazard', 'arrive', 'reroute', 'speed'], alerts: ['hazard', 'arrive', 'speed'], off: [] };
+// Ejaan fonetik untuk suara English yang tersalah sebut nama tempat Melayu (22 Nov 2026: "Semenyih" disebut "semenai").
+// shortcut: ejaan dipilih tanpa dapat mendengar suara iPhone; jika masih tak betul tukar ejaan di sini (cth. 'Semenyee'), tambah nama lain bila ditemui.
+const PRONOUNCE_EN = [[/\bSemenyih\b/gi, 'Semenyeh'], [/\bNegeri\b/gi, 'Negri']];   // "Negeri" → "nejeri" tanpa ini
+function pronounce(text) {
+  return voiceLang === 'en' ? PRONOUNCE_EN.reduce((t, [re, to]) => t.replace(re, to), text) : text;
+}
 function speak(text, kind) {
   if (!('speechSynthesis' in window)) return;
   if (kind !== 'test') {
@@ -1772,7 +1778,7 @@ function speak(text, kind) {
     const allow = VOICE_KINDS[S.voiceMode];
     if (allow && allow.indexOf(kind) < 0) return;
   }
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(pronounce(text));
   u.volume = Math.max(0, Math.min(1, Number(S.volume)));
   const voice = pickVoice(voiceLang);
   // Tiada suara BM/Indonesia pada peranti → teks BM akan dibaca dengan suara lalai (biasanya English). Beritahu sekali.
