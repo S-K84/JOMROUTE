@@ -22,8 +22,9 @@ for (const f of ['Index.html', 'IndexUji.html']) {
 
 // 22 Nov 2026: suara English menyebut "Semenyih" sebagai "semenai". Ejaan fonetik hanya untuk suara English.
 const s2 = clientScript('IndexUji.html');
-const pron = voiceLang => { const c = { voiceLang }; vm.runInNewContext(
-  s2.match(/const PRONOUNCE_EN = [\s\S]*?\];/)[0] + s2.match(/function pronounce\([^)]*\) \{[\s\S]*?\n\}/)[0] + ';this.f = pronounce;', c); return c.f; };
+const pronOf = (src, voiceLang) => { const c = { voiceLang }; vm.runInNewContext(
+  src.match(/const PRONOUNCE_EN = [\s\S]*?\];/)[0] + src.match(/function pronounce\([^)]*\) \{[\s\S]*?\n\}/)[0] + ';this.f = pronounce;', c); return c.f; };
+const pron = voiceLang => pronOf(s2, voiceLang);
 test('sebutan suara English: "Semenyih" dieja fonetik; suara Melayu tidak diubah; perkataan lain tidak disentuh', () => {
   assert.strictEqual(pron('en')('Turn left onto Jalan Banting - Semenyih/B18'), 'Turn left onto Jalan Banting - Semenyeh/B18');
   assert.strictEqual(pron('en')('semenyih'), 'Semenyeh');
@@ -39,4 +40,11 @@ test('sebutan suara English: "Negeri" dieja "Negri" (g keras); suara Melayu tida
 });
 test('speak() menggunakan pronounce()', () => {
   assert.match(s2, /new SpeechSynthesisUtterance\(pronounce\(text\)\)/);
+});
+
+test('Index.html (app biasa) turut menggunakan pronounce() untuk suara English', () => {
+  const s1 = clientScript('Index.html');
+  assert.match(s1, /new SpeechSynthesisUtterance\(pronounce\(text\)\)/);
+  assert.strictEqual(pronOf(s1, 'en')('Jalan Banting - Semenyih / Persiaran Negeri'), 'Jalan Banting - Semenyeh / Persiaran Negri');
+  assert.strictEqual(pronOf(s1, 'ms')('Semenyih'), 'Semenyih');
 });

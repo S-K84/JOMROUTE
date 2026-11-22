@@ -1765,6 +1765,12 @@ function toast(msg, warn) {
 
 // Jenis arahan yang dibenarkan bagi setiap mod "Arahan suara" (null = semua)
 const VOICE_KINDS = { normal: null, less: ['turn', 'hazard', 'arrive', 'reroute', 'speed'], alerts: ['hazard', 'arrive', 'speed'], off: [] };
+// Ejaan fonetik untuk suara English yang tersalah sebut nama tempat Melayu (22 Nov 2026: "Semenyih" disebut "semenai").
+// shortcut: ejaan dipilih tanpa dapat mendengar suara iPhone; jika masih tak betul tukar ejaan di sini (cth. 'Semenyee'), tambah nama lain bila ditemui.
+const PRONOUNCE_EN = [[/\bSemenyih\b/gi, 'Semenyeh'], [/\bNegeri\b/gi, 'Negri']];   // "Negeri" → "nejeri" tanpa ini
+function pronounce(text) {
+  return voiceLang === 'en' ? PRONOUNCE_EN.reduce((t, [re, to]) => t.replace(re, to), text) : text;
+}
 function speak(text, kind) {
   if (!('speechSynthesis' in window)) return;
   if (kind !== 'test') {
@@ -1772,7 +1778,7 @@ function speak(text, kind) {
     const allow = VOICE_KINDS[S.voiceMode];
     if (allow && allow.indexOf(kind) < 0) return;
   }
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(pronounce(text));
   u.volume = Math.max(0, Math.min(1, Number(S.volume)));
   const voice = pickVoice(voiceLang);
   // Tiada suara BM/Indonesia pada peranti → teks BM akan dibaca dengan suara lalai (biasanya English). Beritahu sekali.
