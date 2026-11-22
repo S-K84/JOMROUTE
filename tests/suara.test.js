@@ -194,7 +194,7 @@ test('sebutan "sekarang": arahan tanpa nama jalan, atau yang bermaklumat penting
   assert.strictEqual(sayNow(''), '');
 });
 test('kod navigasi: teks pendek hanya bila nama sudah disebut pada 300/800 m (said.near atau said.far)', () => {
-  for (const f of ['IndexUji.html']) {
+  for (const f of ['Index.html', 'IndexUji.html']) {
     const h = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
     assert.match(h, /const heard = said\.near \|\| said\.far;/, f);
     assert.match(h, /speak\(\(heard \? turnNow\(next\.text\) : next\.text\)/, f);
