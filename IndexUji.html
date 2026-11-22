@@ -1767,7 +1767,7 @@ function toast(msg, warn) {
 const VOICE_KINDS = { normal: null, less: ['turn', 'hazard', 'arrive', 'reroute', 'speed'], alerts: ['hazard', 'arrive', 'speed'], off: [] };
 // Ejaan fonetik untuk suara English yang tersalah sebut nama tempat Melayu (22 Nov 2026: "Semenyih" disebut "semenai").
 // shortcut: ejaan dipilih tanpa dapat mendengar suara iPhone; jika masih tak betul tukar ejaan di sini (cth. 'Semenyee'), tambah nama lain bila ditemui.
-const PRONOUNCE_EN = [[/\bSemenyih\b/gi, 'Semenyeh']];
+const PRONOUNCE_EN = [[/\bSemenyih\b/gi, 'Semenyeh'], [/\bNegeri\b/gi, 'Negri']];   // "Negeri" → "nejeri" tanpa ini
 function pronounce(text) {
   return voiceLang === 'en' ? PRONOUNCE_EN.reduce((t, [re, to]) => t.replace(re, to), text) : text;
 }

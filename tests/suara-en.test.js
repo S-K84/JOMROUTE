@@ -30,6 +30,13 @@ test('sebutan suara English: "Semenyih" dieja fonetik; suara Melayu tidak diubah
   assert.strictEqual(pron('ms')('Belok kiri ke Jalan Banting - Semenyih'), 'Belok kiri ke Jalan Banting - Semenyih');
   assert.strictEqual(pron('en')('Turn right onto Jalan Nilai'), 'Turn right onto Jalan Nilai');
 });
+// 22 Nov 2026: "Persiaran Negeri" disebut "nejeri" (ge → je). "Negri" ialah ejaan lazim (Negri Sembilan) dan disebut dengan g keras.
+test('sebutan suara English: "Negeri" dieja "Negri" (g keras); suara Melayu tidak diubah', () => {
+  assert.strictEqual(pron('en')('Turn left onto Persiaran Negeri'), 'Turn left onto Persiaran Negri');
+  assert.strictEqual(pron('en')('Negeri Sembilan'), 'Negri Sembilan');
+  assert.strictEqual(pron('en')('Jalan Banting - Semenyih / Persiaran Negeri'), 'Jalan Banting - Semenyeh / Persiaran Negri');
+  assert.strictEqual(pron('ms')('Persiaran Negeri'), 'Persiaran Negeri');
+});
 test('speak() menggunakan pronounce()', () => {
   assert.match(s2, /new SpeechSynthesisUtterance\(pronounce\(text\)\)/);
 });
