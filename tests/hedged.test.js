@@ -32,6 +32,6 @@ test('hedged: kedua-dua gagal → ditolak; jika satu gagal dan satu berjaya → 
   const r = await ctx.hedged(() => { n++; return n === 1 ? wait(120).then(() => 'OK') : wait(5).then(() => { throw new Error('gagal kedua'); }); }, 20);
   assert.strictEqual(r, 'OK');
 });
-test('planRoute senyap (kiraan semula) menggunakan hedged', () => {
-  assert.match(s, /silent \? await hedged\(ask, HEDGE_MS\) : await ask\(\)/);
+for (const f of ['Index.html', 'IndexUji.html']) test(`${f}: planRoute senyap (kiraan semula) menggunakan hedged`, () => {
+  assert.match(clientScript(f), /silent \? await hedged\(ask, HEDGE_MS\) : await ask\(\)/);
 });

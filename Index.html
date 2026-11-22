@@ -1711,6 +1711,19 @@ window.addEventListener('online', () => setOffline(false));
 // Had masa panggilan server: tanpanya, panggilan yang tergantung membiarkan shareBusy / fasterBusy kekal true selama-lamanya
 // (perkongsian & semakan laluan berhenti tanpa notis). Mesej sengaja BUKAN ralat rangkaian — ia tidak menukar status liputan.
 const CALL_TIMEOUT_MS = 60000, SLOW_MSG = 'Pelayan lambat menjawab. Cuba lagi.';
+/** Kiraan semula laluan yang tersangkut: call() menunggu 60 s, sepanjang masa itu laluan lama kekal (22 Nov 2026: > 10 s, sedangkan panggilan
+ *  baharu selepas muat semula siap ~3 s). Jika `make()` belum menjawab dalam `delay` ms, hantar satu lagi dan ambil yang tiba dahulu.
+ *  Ralat sebelum itu ditolak serta-merta; ditolak hanya bila semua yang dihantar gagal. Kos: satu panggilan Maps tambahan, hanya bila lambat. */
+const HEDGE_MS = 8000;
+function hedged(make, delay) {
+  return new Promise((resolve, reject) => {
+    let done = false, pending = 0;
+    const finish = (fn, v) => { if (!done) { done = true; clearTimeout(timer); fn(v); } };
+    const go = () => { pending++; Promise.resolve().then(make).then(v => finish(resolve, v), e => { if (--pending === 0) finish(reject, e); }); };
+    const timer = setTimeout(() => { if (!done) go(); }, delay);
+    go();
+  });
+}
 function call(fn, ...args) {
   return new Promise((resolve, reject) => {
     let done = false;
@@ -3157,8 +3170,9 @@ async function planRoute(dest, silent) {
   }
   const req = state.routeReq = (state.routeReq || 0) + 1;
   try {
-    const routes = await call('getRoute', token, { lat: state.me.lat, lng: state.me.lng }, { lat: dest.lat, lng: dest.lng },
+    const ask = () => call('getRoute', token, { lat: state.me.lat, lng: state.me.lng }, { lat: dest.lat, lng: dest.lng },
       routeOpts());
+    const routes = silent ? await hedged(ask, HEDGE_MS) : await ask();   // senyap = kiraan semula semasa navigasi
     // Abaikan jawapan lama: navigasi sudah tamat/sampai, atau permintaan lebih baharu sedang berjalan
     if (req !== state.routeReq || (silent && !state.navigating)) return;
     if (!routes || !routes.length) throw new Error('Laluan tidak dijumpai.');
